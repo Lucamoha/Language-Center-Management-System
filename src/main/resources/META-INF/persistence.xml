@@ -5,7 +5,23 @@
                                  https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
     <persistence-unit name="dataSource" transaction-type="RESOURCE_LOCAL">
-        <class>com.tutorialspoint.eclipselink.entity.Clas</class>
+        <!-- Hibernate Provider -->
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <!-- Entity classes -->
+        <class>com.model.academic.Course</class>
+        <class>com.model.academic.Class</class>
+        <class>com.model.academic.Enrollment</class>
+        <class>com.model.academic.Result</class>
+        <class>com.model.financial.Payment</class>
+        <class>com.model.financial.Invoice</class>
+        <class>com.model.operation.Attendance</class>
+        <class>com.model.operation.Room</class>
+        <class>com.model.operation.Schedule</class>
+        <class>com.model.user.Staff</class>
+        <class>com.model.user.Student</class>
+        <class>com.model.user.Teacher</class>
+        <class>com.model.user.UserAccount</class>
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
             <property name="jakarta.persistence.jdbc.url"
@@ -16,8 +32,7 @@
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
-            <property name="hibernate.hbm2ddl.auto" value="validate"/>
-            <property name="eclipselink.ddl-generation" value="update"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
         </properties>
     </persistence-unit>
 

@@ -4,10 +4,7 @@ import com.model.operation.Room;
 import com.model.operation.RoomStatus;
 import com.model.user.Teacher;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
@@ -17,6 +14,9 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "class")
 public class Class {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

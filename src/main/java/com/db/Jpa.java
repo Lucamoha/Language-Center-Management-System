@@ -4,15 +4,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
-public class Jpa {
+public final class Jpa {
     private static final EntityManagerFactory ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("dataSource");
 
     private Jpa() {
     }
 
-    ;
-
-    private static EntityManager entityManager() {
+    public static EntityManager entityManager() {
         return ENTITY_MANAGER_FACTORY.createEntityManager();
     }
 
