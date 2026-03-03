@@ -6,7 +6,6 @@ import com.exception.AppException;
 import com.model.user.Student;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
-import com.service.StudentService;
 import com.service.impl.StudentServiceImpl;
 import com.ui.dialog.StudentDialog;
 import com.ui.table.StudentTableModel;
@@ -19,15 +18,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-/**
- * Students management panel – fully implements the CRUD + search pattern.
- * All DB operations use SwingWorker to keep the UI responsive.
- */
 public class StudentsPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(StudentsPanel.class);
 
-    private final StudentService service = new StudentServiceImpl();
+    private final StudentServiceImpl service = new StudentServiceImpl();
     private final StudentTableModel model = new StudentTableModel();
     private final JTable table = new JTable(model);
     private final JTextField tfSearch = UiUtil.searchField("Tìm theo tên...");
@@ -179,7 +174,7 @@ public class StudentsPanel extends JPanel {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                service.softDelete(selected.getStudentID());
+                service.delete(selected.getStudentID());
                 return null;
             }
 
