@@ -15,7 +15,7 @@ public class TeacherRepository extends BaseRepository<Teacher, Long> {
     @Override
     public List<Teacher> findAll() {
         try (EntityManager em = em()) {
-            return em.createQuery("SELECT t FROM Teacher t ORDER BY t.fullName", Teacher.class)
+            return em.createQuery("SELECT t FROM Teacher t ORDER BY t.teacherID", Teacher.class)
                     .getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn giáo viên: " + e.getMessage(), e);
@@ -24,7 +24,7 @@ public class TeacherRepository extends BaseRepository<Teacher, Long> {
 
     public List<Teacher> searchByName(String keyword) {
         try (EntityManager em = em()) {
-            return em.createQuery("SELECT t FROM Teacher t WHERE LOWER(t.fullName) LIKE :kw ORDER BY t.fullName", Teacher.class)
+            return em.createQuery("SELECT t FROM Teacher t WHERE LOWER(t.fullName) LIKE :kw ORDER BY t.teacherID", Teacher.class)
                     .setParameter("kw", "%" + keyword.toLowerCase() + "%")
                     .getResultList();
         } catch (Exception e) {

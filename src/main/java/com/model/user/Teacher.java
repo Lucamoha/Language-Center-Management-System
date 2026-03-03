@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "teacher")
+@ToString
 public class Teacher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

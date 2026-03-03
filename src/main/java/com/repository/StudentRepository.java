@@ -4,7 +4,6 @@ import com.exception.SystemException;
 import com.model.user.Student;
 import com.model.user.UserStatus;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 
 import java.util.List;
 
@@ -46,27 +45,6 @@ public class StudentRepository extends BaseRepository<Student, Long> {
                     .getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn học viên active: " + e.getMessage(), e);
-        }
-    }
-
-    /** Soft-delete: set status to INACTIVE */
-    public void softDelete(Long studentId) {
-        EntityManager em = em();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Student s = em.find(Student.class, studentId);
-            if (s != null) {
-                s.setStatus(UserStatus.INACTIVE);
-                em.merge(s);
-            }
-            tx.commit();
-        } catch (Exception e) {
-            if (tx.isActive())
-                tx.rollback();
-            throw new SystemException("Lỗi xóa mềm học viên: " + e.getMessage(), e);
-        } finally {
-            em.close();
         }
     }
 }

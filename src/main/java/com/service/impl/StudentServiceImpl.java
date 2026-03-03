@@ -12,13 +12,12 @@ import com.repository.StudentRepository;
 import com.repository.UserAccountRepository;
 import com.security.CurrentUser;
 import com.security.PermissionChecker;
-import com.security.SecurityContext;
-import com.service.StudentService;
+import com.service.BaseService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class StudentServiceImpl implements StudentService {
+public class StudentServiceImpl implements BaseService<Student, Long, StudentDTO> {
 
     private final StudentRepository repo = new StudentRepository();
 
@@ -27,20 +26,18 @@ public class StudentServiceImpl implements StudentService {
         CurrentUser u = PermissionChecker.requireAuthenticated();
         if (u.isStudent()) {
             Long id = u.relatedId();
-            return id == null ? List.of() : repo.findById(id).map(List::of).orElse(List.of());
+            return id == null
+                    ? List.of()
+                    : repo.findById(id).map(List::of).orElse(List.of());
         }
         return repo.findAll();
     }
 
     @Override
     public List<Student> search(String keyword) {
-        PermissionChecker.requireAuthenticated();
-        if (keyword == null || keyword.isBlank())
-            return findAll();
-        CurrentUser u = SecurityContext.get();
-        if (u != null && u.isStudent())
-            return findAll(); // restriction applied
-        return repo.searchByName(keyword.trim());
+        return findAll().stream()
+                .filter(student -> student.toString().toLowerCase().contains(keyword.toLowerCase()))
+                .toList();
     }
 
     @Override
@@ -65,11 +62,12 @@ public class StudentServiceImpl implements StudentService {
 
         // Validate username uniqueness if provided
         UserAccountRepository accountRepo = new UserAccountRepository();
-        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
-            if (accountRepo.findByUsername(dto.getUsername().trim()).isPresent()) {
+        if (dto.getUsername() != null
+                && !dto.getUsername().isBlank()
+                && accountRepo.findByUsername(dto.getUsername().trim()).isPresent()) {
                 throw new BusinessException("Tên đăng nhập '" + dto.getUsername() + "' đã tồn tại.");
             }
-        }
+
 
         Student student = Student.builder()
                 .fullName(dto.getFullName().trim())
@@ -121,14 +119,15 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public void softDelete(Long id) {
+    public void delete(Long id) {
         CurrentUser u = PermissionChecker.requireAuthenticated();
         if (!u.isAdmin() && !u.isConsultant()) {
             throw new BusinessException("Chỉ Admin hoặc Tư vấn viên mới có thể xóa học viên.");
         }
-        repo.findById(id)
+        Student student = repo.findById(id)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy học viên với ID: " + id));
-        repo.softDelete(id);
+        student.setStatus(UserStatus.INACTIVE);
+        repo.save(student);
     }
 
     // ---- validation ----

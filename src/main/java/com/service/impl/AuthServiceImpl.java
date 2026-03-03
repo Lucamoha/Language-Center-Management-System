@@ -24,10 +24,10 @@ public class AuthServiceImpl implements com.service.AuthService {
             throw new ValidationException("Mật khẩu không được để trống.");
 
         UserAccount account = userAccountRepo.findByUsername(username.trim())
-                .orElseThrow(() -> new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng."));
+                .orElseThrow(() -> new BusinessException("Tên đăng nhập không tổn tại."));
 
         if (!BCrypt.verifyer().verify(password.toCharArray(), account.getPasswordHash().toCharArray()).verified) {
-            throw new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng.");
+            throw new BusinessException("Mật khẩu không đúng.");
         }
 
         UserRole role = account.getRole();
