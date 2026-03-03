@@ -9,11 +9,6 @@ import com.ui.util.UiUtil;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Main application frame.
- * Layout: left sidebar with role-gated navigation buttons + right CardLayout
- * content area.
- */
 public class MainFrame extends JFrame {
 
     // Card names (used as keys in CardLayout)
@@ -42,7 +37,7 @@ public class MainFrame extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(1024, 680));
 
-        buildContent();
+        buildContent(user);
         buildSidebar(user);
         buildHeader(user);
 
@@ -65,22 +60,38 @@ public class MainFrame extends JFrame {
 
     // ---------- content panels ----------
 
-    private void buildContent() {
+    private void buildContent(CurrentUser user) {
         contentPanel.setBackground(UiUtil.COLOR_BG);
+
+        // Panels visible to all authenticated roles
         contentPanel.add(new DashboardPanel(), CARD_DASHBOARD);
-        contentPanel.add(new StudentsPanel(), CARD_STUDENTS);
-        contentPanel.add(new TeachersPanel(), CARD_TEACHERS);
-        contentPanel.add(new CoursesPanel(), CARD_COURSES);
-        contentPanel.add(new ClassesPanel(), CARD_CLASSES);
-        contentPanel.add(new EnrollmentsPanel(), CARD_ENROLLMENTS);
-        contentPanel.add(new RoomsPanel(), CARD_ROOMS);
-        contentPanel.add(new SchedulesPanel(), CARD_SCHEDULES);
-        contentPanel.add(new AttendancePanel(), CARD_ATTENDANCE);
-        contentPanel.add(new ResultsPanel(), CARD_RESULTS);
-        contentPanel.add(new InvoicesPanel(), CARD_INVOICES);
-        contentPanel.add(new PaymentsPanel(), CARD_PAYMENTS);
-        contentPanel.add(new StaffPanel(), CARD_STAFF);
-        contentPanel.add(new UserAccountsPanel(), CARD_USERACCOUNT);
+
+        if (canSeeStudents(user))
+            contentPanel.add(new StudentsPanel(), CARD_STUDENTS);
+        if (user.isAdmin() || user.isConsultant())
+            contentPanel.add(new TeachersPanel(), CARD_TEACHERS);
+        if (user.isAdmin() || user.isConsultant() || user.isTeacher())
+            contentPanel.add(new CoursesPanel(), CARD_COURSES);
+        if (user.isAdmin() || user.isConsultant() || user.isTeacher())
+            contentPanel.add(new ClassesPanel(), CARD_CLASSES);
+        if (user.isAdmin() || user.isConsultant() || user.isAccountant() || user.isStudent())
+            contentPanel.add(new EnrollmentsPanel(), CARD_ENROLLMENTS);
+        if (user.isAdmin() || user.isConsultant())
+            contentPanel.add(new RoomsPanel(), CARD_ROOMS);
+        if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
+            contentPanel.add(new SchedulesPanel(), CARD_SCHEDULES);
+        if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
+            contentPanel.add(new AttendancePanel(), CARD_ATTENDANCE);
+        if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
+            contentPanel.add(new ResultsPanel(), CARD_RESULTS);
+        if (user.isAdmin() || user.isAccountant() || user.isStudent())
+            contentPanel.add(new InvoicesPanel(), CARD_INVOICES);
+        if (user.isAdmin() || user.isAccountant() || user.isStudent())
+            contentPanel.add(new PaymentsPanel(), CARD_PAYMENTS);
+        if (user.isAdmin())
+            contentPanel.add(new StaffPanel(), CARD_STAFF);
+        if (user.isAdmin())
+            contentPanel.add(new UserAccountsPanel(), CARD_USERACCOUNT);
     }
 
     // ---------- sidebar ----------
