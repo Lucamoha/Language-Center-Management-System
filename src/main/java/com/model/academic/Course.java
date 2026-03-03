@@ -21,19 +21,27 @@ public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long courseID;
+
     @Column(nullable = false)
     String courseName;
+
     String description;
+
     @Enumerated(EnumType.STRING)
     Level level;
+
     Integer duration; // hours / week
+
     @Column(precision = 18, scale = 2)
-            @Builder.Default
+    @Builder.Default
     BigDecimal fee = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
-            @Builder.Default
+    @Builder.Default
     CourseStatus status = CourseStatus.ACTIVE;
+
     @CreationTimestamp
     LocalDateTime createdAt;
+
     LocalDateTime updatedAt;
 }

@@ -21,15 +21,20 @@ public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long invoiceID;
+
     @ManyToOne
-            @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     Student student;
+
     @OneToOne
-            @JoinColumn(name = "payment_id", nullable = false)
+    @JoinColumn(name = "payment_id", nullable = false)
     Payment payment;
+
     BigDecimal totalAmount;
+
     @CreationTimestamp
     LocalDateTime issuedAt;
+
     @Enumerated(EnumType.STRING)
     InvoiceStatus status;
 }

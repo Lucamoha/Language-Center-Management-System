@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,18 +17,26 @@ import java.util.UUID;
 @Table(name = "teacher")
 public class Teacher {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    UUID teacherID;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long teacherID;
+
     @Column(nullable = false)
     String fullName;
+
     String phone;
+
     String email;
+
+    @Enumerated(EnumType.STRING)
     Specialty specialty;
+
     @CreationTimestamp
     LocalDateTime hireDate;
+
     LocalDateTime updatedAt;
+
     @Enumerated(EnumType.STRING)
-            @Builder.Default
+    @Builder.Default
     UserStatus status = UserStatus.ACTIVE;
 }
 

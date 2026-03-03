@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -21,16 +22,18 @@ public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long scheduleID;
+
     @ManyToOne
-            @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id", nullable = false)
     Class aClass;
-    @ManyToOne
-            @JoinColumn(name = "student_id", nullable = false)
-    Student student;
+
     @OneToOne
-            @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room_id", nullable = false)
     Room room;
+
     LocalDate date;
-    LocalDateTime startTime;
-    LocalDateTime endTime;
+
+    LocalTime startTime;
+
+    LocalTime endTime;
 }

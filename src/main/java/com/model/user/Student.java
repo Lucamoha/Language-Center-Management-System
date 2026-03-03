@@ -20,18 +20,27 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long studentID;
+
     @Column(nullable = false)
     String fullName;
+
     LocalDate dateOfBirth;
+
     @Enumerated(EnumType.STRING)
     Gender gender;
+
     String phone;
+
     String email;
+
     String address;
+
     @CreationTimestamp
     LocalDateTime registeredAt;
+
     LocalDateTime updatedAt;
+
     @Enumerated(EnumType.STRING)
-            @Builder.Default
+    @Builder.Default
     UserStatus status = UserStatus.ACTIVE;
 }

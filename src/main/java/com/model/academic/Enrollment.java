@@ -20,13 +20,17 @@ public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long enrollmentID;
+
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     Student student;
+
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id", nullable = false)
     Class aclass;
+
     @CreationTimestamp
     LocalDateTime enrolledAt;
+
     LocalDateTime updatedAt;
 }

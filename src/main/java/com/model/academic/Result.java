@@ -17,12 +17,16 @@ public class Result {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long resultID;
+
     @ManyToOne
-            @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     Student student;
+
     @ManyToOne
-            @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id", nullable = false)
     Class aClass;
+
     Double score;
+
     String comment;
 }

@@ -19,15 +19,23 @@ public class Staff {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long staffID;
+
     @Column(nullable = false)
     String fullName;
-    StaffRole role;
-    String phone;
-    String email;
+
     @Enumerated(EnumType.STRING)
-            @Builder.Default
+    StaffRole role;
+
+    String phone;
+
+    String email;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
     UserStatus status = UserStatus.ACTIVE;
+
     @CreationTimestamp
     LocalDateTime createdAt;
+
     LocalDateTime updatedAt;
 }

@@ -22,14 +22,20 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long paymentID;
+
     @OneToOne
-            @JoinColumn(name = "invoice_id", nullable = false)
+    @JoinColumn(name = "invoice_id", nullable = false)
     Invoice invoice;
+
     @Builder.Default
     BigDecimal amount = BigDecimal.ZERO;
+
     @CreationTimestamp
     LocalDateTime paymentDate;
+
+    @Enumerated(EnumType.STRING)
     PaymentMethod paymentMethod;
+
     @Enumerated(EnumType.STRING)
     PaymentStatus status;
 }

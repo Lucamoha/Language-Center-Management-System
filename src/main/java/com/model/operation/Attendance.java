@@ -22,14 +22,20 @@ public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long attendanceID;
+
     @ManyToOne
-            @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     Student student;
+
     @ManyToOne
-            @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id", nullable = false)
     Class aClass;
+
     @CreationTimestamp
     LocalDateTime createdAt;
+
     LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
     AttendanceStatus status;
 }

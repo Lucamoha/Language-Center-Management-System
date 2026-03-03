@@ -21,19 +21,28 @@ public class Class {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long classID;
+
     String className;
+
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "course_id", nullable = false)
     Course course;
+
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id", nullable = false)
     Teacher teacher;
+
     LocalDate startDate;
+
     LocalDate endDate;
+
     @Builder.Default
     Integer maxStudent = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room_id", nullable = false)
     Room room;
+
+    @Enumerated(EnumType.STRING)
     RoomStatus status;
 }

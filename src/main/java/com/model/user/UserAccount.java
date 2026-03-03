@@ -13,25 +13,31 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "userAccount")
+@Table(name = "user_account")
 public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID userID;
+
     @Column(nullable = false, unique = true)
     String username;
+
     @Column(nullable = false)
     String passwordHash;
+
     @Enumerated(EnumType.STRING)
-            @Builder.Default
+    @Builder.Default
     UserRole role = UserRole.STUDENT;
+
     @OneToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "student_id")
+    @JoinColumn(name = "student_id")
     Student student;
+
     @OneToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "teacher_id")
+    @JoinColumn(name = "teacher_id")
     Teacher teacher;
+
     @OneToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "staff_id")
+    @JoinColumn(name = "staff_id")
     Staff staff;
 }

@@ -19,15 +19,21 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long roomID;
+
     @Column(unique = true, nullable = false)
     String roomName;
+
     @Column(nullable = false)
-            @Builder.Default
+    @Builder.Default
     Integer capacity = 0;
+
     String location;
+
     @Builder.Default
     RoomStatus status = RoomStatus.ACTIVE;
+
     @CreationTimestamp
     LocalDateTime createdAt;
+
     LocalDateTime updatedAt;
 }
