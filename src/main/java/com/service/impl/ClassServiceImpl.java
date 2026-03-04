@@ -4,6 +4,7 @@ import com.dto.ClassDTO;
 import com.exception.BusinessException;
 import com.model.academic.*;
 import com.model.academic.Class;
+import com.model.user.StaffRole;
 import com.repository.*;
 import com.security.PermissionChecker;
 
@@ -68,7 +69,7 @@ public class ClassServiceImpl {
     }
 
     public void delete(Long id) {
-        PermissionChecker.requireAdmin();
+        PermissionChecker.requireAdminOrStaff(StaffRole.CONSULTANT);
         classRepo.delete(id);
     }
 
