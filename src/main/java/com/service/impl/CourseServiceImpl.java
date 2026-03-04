@@ -1,14 +1,17 @@
 package com.service.impl;
 
+import com.dto.CourseDTO;
 import com.exception.BusinessException;
 import com.model.academic.Course;
+import com.model.academic.CourseStatus;
 import com.repository.CourseRepository;
 import com.security.PermissionChecker;
-import com.service.CourseService;
+import com.service.BaseService;
 
 import java.util.List;
+import java.util.Optional;
 
-public class CourseServiceImpl implements CourseService {
+public class CourseServiceImpl implements BaseService<Course, Long, CourseDTO> {
     private final CourseRepository repo = new CourseRepository();
 
     @Override
@@ -31,17 +34,33 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public Course save(Course course) {
+    public Course save(CourseDTO dto) {
         PermissionChecker.requireAdminOrAnyStaff();
-        if (course.getCourseName() == null || course.getCourseName().isBlank())
+        if (dto.getCourseName() == null || dto.getCourseName().isBlank())
             throw new com.exception.ValidationException("Tên khóa học không được để trống.");
+
+        Course course = Course.builder()
+                .courseName(dto.getCourseName().trim())
+                .description(dto.getDescription().trim())
+                .duration(dto.getDuration())
+                .fee(dto.getFee())
+                .level(dto.getLevel())
+                .status(dto.getStatus() != null ? dto.getStatus() : CourseStatus.ACTIVE)
+                .build();
         return repo.save(course);
     }
 
     @Override
-    public Course update(Course course) {
+    public Course update(Long id, CourseDTO dto) {
         PermissionChecker.requireAdminOrAnyStaff();
-        return repo.update(course);
+        Course old = this.findById(id);
+        old.setCourseName(dto.getCourseName().trim());
+        old.setDescription(dto.getDescription().trim());
+        old.setDuration(dto.getDuration());
+        old.setFee(dto.getFee());
+        old.setLevel(dto.getLevel());
+        old.setStatus(dto.getStatus());
+        return repo.update(old);
     }
 
     @Override

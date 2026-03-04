@@ -1,10 +1,10 @@
 package com.model.academic;
 
-import com.model.user.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,9 +30,10 @@ public class Course {
     @Enumerated(EnumType.STRING)
     Level level;
 
+    @Column(nullable = false)
     Integer duration; // hours / week
 
-    @Column(precision = 18, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     @Builder.Default
     BigDecimal fee = BigDecimal.ZERO;
 
@@ -41,7 +42,9 @@ public class Course {
     CourseStatus status = CourseStatus.ACTIVE;
 
     @CreationTimestamp
+    @Column(updatable = false)
     LocalDateTime createdAt;
 
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 }

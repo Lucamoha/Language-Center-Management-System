@@ -1,5 +1,6 @@
 package com.service;
 
+import com.dto.CourseDTO;
 import com.model.academic.Course;
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface CourseService {
 
     Course findById(Long id);
 
-    Course save(Course course);
+    Course save(CourseDTO dto);
 
     Course update(Course course);
 
