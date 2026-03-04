@@ -67,7 +67,7 @@ public class TeacherServiceImpl implements BaseService<Teacher, Long, TeacherDTO
         Teacher saved = repo.save(teacher);
 
         // Create linked UserAccount
-        userAccountService.save(dto.getUsername(), dto.getUsername(), UserRole.TEACHER, saved);
+        userAccountService.save(dto.getUsername(), dto.getPassword(), UserRole.TEACHER, saved);
 
         return saved;
     }

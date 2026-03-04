@@ -82,7 +82,7 @@ public class StudentServiceImpl implements BaseService<Student, Long, StudentDTO
         Student saved = repo.save(student);
 
         // Create linked UserAccount if username + password provided
-        userAccountService.save(dto.getUsername(), dto.getUsername(), UserRole.STUDENT, saved);
+        userAccountService.save(dto.getUsername(), dto.getPassword(), UserRole.STUDENT, saved);
 
         return saved;
     }

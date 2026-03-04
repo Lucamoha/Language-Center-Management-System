@@ -67,7 +67,7 @@ public class StaffServiceImpl implements BaseService<Staff, Long, StaffDTO> {
         Staff saved = repo.save(staff);
 
         // Create linked UserAccount
-        userAccountService.save(dto.getUsername(), dto.getUsername(), UserRole.STAFF, saved);
+        userAccountService.save(dto.getUsername(), dto.getPassword(), UserRole.STAFF, saved);
 
         return saved;
     }
