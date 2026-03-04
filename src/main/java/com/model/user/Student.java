@@ -20,28 +20,37 @@ import java.time.LocalDateTime;
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "student_id")
     Long studentID;
 
-    @Column(nullable = false)
+    @Column(name = "full_name", nullable = false)
     String fullName;
 
+    @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     Gender gender;
 
+    @Column(name = "phone")
     String phone;
 
+    @Column(name = "email")
     String email;
 
+    @Column(name = "address")
     String address;
 
     @CreationTimestamp
+    @Column(name = "registered_at")
     LocalDateTime registeredAt;
 
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     @Builder.Default
     UserStatus status = UserStatus.ACTIVE;
 }

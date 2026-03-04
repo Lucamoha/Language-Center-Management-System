@@ -5,6 +5,7 @@ import com.model.academic.Class;
 import com.model.academic.ClassStatus;
 import com.model.academic.Course;
 import com.model.academic.Level;
+import com.ui.util.JTextFieldPlaceholder;
 import com.ui.util.UiUtil;
 import lombok.Getter;
 
@@ -22,9 +23,9 @@ public class ClassDialog extends JDialog {
 
     // Information Fields
     private final JTextField tfName = new JTextField(25);
-    private final JTextField tfEndDate = new JTextField(15);
     private final JTextField tfMaxStudent = new JTextField(25);
-    private final JTextField tfStartDate = new JTextField(25);
+    private final JTextFieldPlaceholder tfStartDate = new JTextFieldPlaceholder("dd/MM/yyyy");
+    private final JTextFieldPlaceholder tfEndDate = new JTextFieldPlaceholder("dd/MM/yyyy");
     private final JComboBox<ClassStatus> cbStatus = new JComboBox<>(ClassStatus.values());
     private final JTextField tfCourseID = new JTextField(30);
     private final JTextField tfRoomID = new JTextField(30);
@@ -61,8 +62,8 @@ public class ClassDialog extends JDialog {
                 { "Học viên tối đa *", tfMaxStudent },
                 { "Trạng thái", cbStatus },
                 { "Mã khóa học *", tfCourseID },
-                { "Mã phòng học *", tfRoomID },
                 { "Mã giáo viên *", tfTeacherID },
+                { "Mã phòng học *", tfRoomID },
                 { "Ngày bắt đầu *", tfStartDate },
                 { "Ngày kết thúc *", tfEndDate },
         };
@@ -163,7 +164,7 @@ public class ClassDialog extends JDialog {
         if (c.getTeacher() != null)
             tfTeacherID.setText(String.valueOf(c.getTeacher().getTeacherID()));
         if (c.getRoom() != null)
-            tfMaxStudent.setText(String.valueOf(c.getRoom().getRoomID()));
+            tfRoomID.setText(String.valueOf(c.getRoom().getRoomID()));
         if (c.getStatus() != null)
             cbStatus.setSelectedItem(c.getStatus());
         if (c.getStartDate() != null)

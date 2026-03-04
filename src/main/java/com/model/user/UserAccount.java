@@ -19,13 +19,14 @@ public class UserAccount {
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID userID;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "username", nullable = false, unique = true)
     String username;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     String passwordHash;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role")
     @Builder.Default
     UserRole role = UserRole.STUDENT;
 

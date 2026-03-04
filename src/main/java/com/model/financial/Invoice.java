@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "invoice_id")
     Long invoiceID;
 
     @ManyToOne
@@ -30,11 +31,14 @@ public class Invoice {
     @JoinColumn(name = "payment_id", nullable = false)
     Payment payment;
 
+    @Column(name = "total_amount")
     BigDecimal totalAmount;
 
     @CreationTimestamp
+    @Column(name = "issued_at")
     LocalDateTime issuedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     InvoiceStatus status;
 }

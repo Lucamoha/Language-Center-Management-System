@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class Result {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "result_id")
     Long resultID;
 
     @ManyToOne
@@ -26,7 +27,9 @@ public class Result {
     @JoinColumn(name = "class_id", nullable = false)
     Class aClass;
 
+    @Column(name = "score")
     Double score;
 
+    @Column(name = "comment")
     String comment;
 }

@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "enrollment_id")
     Long enrollmentID;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,7 +31,9 @@ public class Enrollment {
     Class aclass;
 
     @CreationTimestamp
+    @Column(name = "enrolled_at")
     LocalDateTime enrolledAt;
 
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 }

@@ -1,10 +1,8 @@
 package com.ui.panel;
 
 import com.dto.ClassDTO;
-import com.dto.CourseDTO;
 import com.exception.AppException;
 import com.model.academic.Class;
-import com.model.academic.Course;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.ClassServiceImpl;

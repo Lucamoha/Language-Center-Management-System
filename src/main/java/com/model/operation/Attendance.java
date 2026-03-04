@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "attendance_id")
     Long attendanceID;
 
     @ManyToOne
@@ -32,10 +33,13 @@ public class Attendance {
     Class aClass;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     AttendanceStatus status;
 }

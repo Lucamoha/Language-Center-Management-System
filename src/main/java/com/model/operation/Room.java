@@ -18,22 +18,27 @@ import java.time.LocalDateTime;
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "room_id")
     Long roomID;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "room_name", unique = true, nullable = false)
     String roomName;
 
-    @Column(nullable = false)
+    @Column(name = "capacity", nullable = false)
     @Builder.Default
     Integer capacity = 0;
 
+    @Column(name = "location")
     String location;
 
+    @Column(name = "status")
     @Builder.Default
     RoomStatus status = RoomStatus.ACTIVE;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 }

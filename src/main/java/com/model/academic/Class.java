@@ -1,7 +1,6 @@
 package com.model.academic;
 
 import com.model.operation.Room;
-import com.model.operation.RoomStatus;
 import com.model.user.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,8 +19,10 @@ import java.time.LocalDate;
 public class Class {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "class_id")
     Long classID;
 
+    @Column(name = "class_name")
     String className;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,13 +33,13 @@ public class Class {
     @JoinColumn(name = "teacher_id", nullable = false)
     Teacher teacher;
 
-    @Column(nullable = false)
+    @Column(name = "start_date", nullable = false)
     LocalDate startDate;
 
-    @Column(nullable = false)
+    @Column(name = "end_date", nullable = false)
     LocalDate endDate;
 
-    @Column(nullable = false)
+    @Column(name = "max_student", nullable = false)
     @Builder.Default
     Integer maxStudent = 0;
 
@@ -47,6 +48,7 @@ public class Class {
     Room room;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     @Builder.Default
     ClassStatus status = ClassStatus.ACTIVE;
 }

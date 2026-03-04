@@ -20,31 +20,36 @@ import java.time.LocalDateTime;
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "course_id")
     Long courseID;
 
-    @Column(nullable = false)
+    @Column(name = "course_name", nullable = false)
     String courseName;
 
+    @Column(name = "description")
     String description;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "level")
     Level level;
 
-    @Column(nullable = false)
+    @Column(name = "duration", nullable = false)
     Integer duration; // hours / week
 
-    @Column(nullable = false, precision = 18, scale = 2)
+    @Column(name = "fee", nullable = false, precision = 18, scale = 2)
     @Builder.Default
     BigDecimal fee = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     @Builder.Default
     CourseStatus status = CourseStatus.ACTIVE;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 }

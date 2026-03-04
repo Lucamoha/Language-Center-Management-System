@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ClassTableModel extends AbstractTableModel {
     private static final String[] COLUMNS = {
-            "ID", "Tên", "Học viên tối đa", "Trạng thái", "ID khóa học", "ID phòng học", "ID giáo viên", "Ngày bắt đầu", "Ngày kết thúc"
+            "ID", "Tên", "Học viên tối đa", "Trạng thái", "ID khóa học", "ID giáo viên", "ID phòng học", "Ngày bắt đầu", "Ngày kết thúc"
     };
 
     private List<Class> data = new ArrayList<>();
@@ -44,10 +44,10 @@ public class ClassTableModel extends AbstractTableModel {
             case 0 -> c.getClassID();
             case 1 -> c.getClassName();
             case 2 -> c.getMaxStudent() != null ? c.getMaxStudent().toString() : "";
-            case 3 -> c.getStatus() != null ? c.getStatus().name() : "";
+            case 3 -> c.getStatus() != null ? c.getStatus() : "";
             case 4 -> c.getCourse() != null ? c.getCourse().getCourseID() : "";
-            case 5 -> c.getRoom() != null ? c.getRoom().getRoomID() : "";
-            case 6 -> c.getTeacher() != null ? c.getTeacher().getTeacherID() : "";
+            case 5 -> c.getTeacher() != null ? c.getTeacher().getTeacherID() : "";
+            case 6 -> c.getRoom() != null ? c.getRoom().getRoomID() : "";
             case 7 -> c.getStartDate() != null ? c.getStartDate() : "";
             case 8 -> c.getEndDate() != null ? c.getEndDate() : "";
             default -> "";

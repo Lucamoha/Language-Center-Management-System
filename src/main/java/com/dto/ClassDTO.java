@@ -14,11 +14,11 @@ import java.time.LocalDate;
 public class ClassDTO {
     Long classID;
     String className;
+    Integer maxStudent;
     Long courseID;
     Long teacherID;
-    LocalDate startDate;
-    LocalDate endDate;
-    Integer maxStudent;
     Long roomID;
     ClassStatus status;
+    LocalDate startDate;
+    LocalDate endDate;
 }

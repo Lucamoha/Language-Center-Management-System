@@ -21,21 +21,26 @@ import java.util.UUID;
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "payment_id")
     Long paymentID;
 
     @OneToOne
     @JoinColumn(name = "invoice_id", nullable = false)
     Invoice invoice;
 
+    @Column(name = "amount")
     @Builder.Default
     BigDecimal amount = BigDecimal.ZERO;
 
     @CreationTimestamp
+    @Column(name = "payment_date")
     LocalDateTime paymentDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
     PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     PaymentStatus status;
 }
