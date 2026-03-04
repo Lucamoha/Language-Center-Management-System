@@ -9,7 +9,7 @@ import java.util.List;
 public class StudentTableModel extends AbstractTableModel {
 
     private static final String[] COLUMNS = {
-            "ID", "Họ tên", "Ngày sinh", "Giới tính", "Điện thoại", "Email", "Trạng thái"
+            "ID", "Họ tên", "Ngày sinh", "Giới tính", "Điện thoại", "Email", "Trạng thái", "Địa chỉ"
     };
 
     private List<Student> data = new ArrayList<>();
@@ -49,6 +49,7 @@ public class StudentTableModel extends AbstractTableModel {
             case 4 -> s.getPhone() != null ? s.getPhone() : "";
             case 5 -> s.getEmail() != null ? s.getEmail() : "";
             case 6 -> s.getStatus() != null ? s.getStatus().name() : "";
+            case 7 -> s.getAddress() != null ? s.getAddress() : "";
             default -> "";
         };
     }
