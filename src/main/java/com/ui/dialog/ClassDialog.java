@@ -133,19 +133,30 @@ public class ClassDialog extends JDialog {
             return;
         }
 
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
         try {
-            dto.setStartDate(LocalDate.parse(tfStartDate.getText().trim(), formatter));
+            startDate = LocalDate.parse(tfStartDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
             warn("Ngày bắt đầu không hợp lệ! Vui lòng nhập theo định dạng (dd/MM/yyyy)!");
             return;
         }
 
         try {
-            dto.setEndDate(LocalDate.parse(tfEndDate.getText().trim(), formatter));
+            endDate = LocalDate.parse(tfEndDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
             warn("Ngày kết thúc không hợp lệ! Vui lòng nhập theo định dạng (dd/MM/yyyy)!");
             return;
         }
+
+        if(endDate.isBefore(startDate)){
+            warn("Ngày kết thúc phải sau ngày bắt đầu!");
+            return;
+        }
+
+        dto.setStartDate(startDate);
+        dto.setEndDate(endDate);
 
         result = dto;
         dispose();

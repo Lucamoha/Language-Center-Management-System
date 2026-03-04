@@ -49,7 +49,7 @@ public class ClassesPanel extends JPanel {
     private JPanel buildHeader() {
         JPanel p = new JPanel(new BorderLayout(10, 0));
         p.setOpaque(false);
-        p.add(UiUtil.sectionTitle("Quản lý Khóa học"), BorderLayout.WEST);
+        p.add(UiUtil.sectionTitle("Quản lý Lớp học"), BorderLayout.WEST);
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
