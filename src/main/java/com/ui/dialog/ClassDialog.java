@@ -3,9 +3,9 @@ package com.ui.dialog;
 import com.dto.ClassDTO;
 import com.model.academic.Class;
 import com.model.academic.ClassStatus;
-import com.model.academic.Course;
-import com.model.academic.Level;
+import com.service.impl.ClassServiceImpl;
 import com.ui.util.JTextFieldPlaceholder;
+import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
 import lombok.Getter;
 
@@ -16,10 +16,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class ClassDialog extends JDialog {
-    private final boolean isEdit;
-
+    private Class existing = null;
     @Getter
-    private ClassDTO result;
+    private boolean isSuccess;
+    private final ClassServiceImpl service = new ClassServiceImpl();
 
     // Information Fields
     private final JTextField tfName = new JTextField(25);
@@ -35,9 +35,9 @@ public class ClassDialog extends JDialog {
 
     public ClassDialog(Frame parent, Class existing) {
         super(parent, existing == null ? "Thêm lớp học" : "Sửa lớp học", true);
-        isEdit = existing != null;
+        this.existing = existing;
 
-        if (isEdit)
+        if (existing != null)
             prefill(existing);
 
         setLayout(new BorderLayout(10, 10));
@@ -84,7 +84,7 @@ public class ClassDialog extends JDialog {
 
     private JPanel buildButtons() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        JButton btnOk = UiUtil.primaryButton(isEdit ? "Cập nhật" : "Lưu");
+        JButton btnOk = UiUtil.primaryButton(existing != null ? "Cập nhật" : "Lưu");
         JButton btnCancel = new JButton("Hủy");
         btnOk.addActionListener(e -> onOk());
         btnCancel.addActionListener(e -> dispose());
@@ -102,7 +102,6 @@ public class ClassDialog extends JDialog {
 
         ClassDTO dto = new ClassDTO();
         dto.setClassName(name);
-
         try {
             dto.setMaxStudent(Integer.parseInt(tfMaxStudent.getText().trim()));
         } catch (Exception e) {
@@ -133,24 +132,24 @@ public class ClassDialog extends JDialog {
             return;
         }
 
-        LocalDate startDate = null;
-        LocalDate endDate = null;
+        LocalDate startDate;
+        LocalDate endDate;
 
         try {
             startDate = LocalDate.parse(tfStartDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
-            warn("Ngày bắt đầu không hợp lệ! Vui lòng nhập theo định dạng (dd/MM/yyyy)!");
+            warn("Ngày bắt đầu không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
             return;
         }
 
         try {
             endDate = LocalDate.parse(tfEndDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
-            warn("Ngày kết thúc không hợp lệ! Vui lòng nhập theo định dạng (dd/MM/yyyy)!");
+            warn("Ngày kết thúc không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
             return;
         }
 
-        if(endDate.isBefore(startDate)){
+        if (endDate.isBefore(startDate)) {
             warn("Ngày kết thúc phải sau ngày bắt đầu!");
             return;
         }
@@ -158,11 +157,37 @@ public class ClassDialog extends JDialog {
         dto.setStartDate(startDate);
         dto.setEndDate(endDate);
 
-        result = dto;
-        dispose();
+        new SwingWorker<Class, Void>() {
+            @Override
+            protected Class doInBackground() throws Exception {
+                if(existing != null) {
+                    dto.setClassID(existing.getClassID());
+                    return service.update(dto.getClassID(), dto);
+                }
+                return service.save(dto);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get(); // kiểm tra doInBackground có lỗi không
+                    if(existing != null)
+                        MessageBox.info(ClassDialog.this, "Cập nhật lớp học thành công.");
+                    else
+                        MessageBox.info(ClassDialog.this, "Thêm lớp học thành công.");
+
+                    isSuccess = true; // Đặt flag để bên panel biết mà reload data
+                    dispose();
+
+                } catch (Exception e) {
+                    String msg = e.getCause().getMessage();
+                    MessageBox.warn(ClassDialog.this, msg);
+                }
+            }
+        }.execute();
     }
 
-    private void warn(String msg) {
+    public void warn(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
     }
 

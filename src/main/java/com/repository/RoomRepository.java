@@ -21,4 +21,16 @@ public class RoomRepository extends BaseRepository<Room, Long> {
             throw new SystemException("Lỗi truy vấn phòng học: " + e.getMessage(), e);
         }
     }
+
+    public List<Room> searchByName(String keyword) {
+        try (EntityManager em = em()) {
+            return em.createQuery(
+                    "SELECT r FROM Room r " +
+                            "WHERE LOWER(r.roomName) LIKE :kw " +
+                            "ORDER BY r.roomName", Room.class)
+                    .setParameter("kw", "%" + keyword.toLowerCase() + "%").getResultList();
+        } catch (Exception e) {
+            throw new SystemException("Lỗi tìm kiếm phòng học: " + e.getMessage(), e);
+        }
+    }
 }
