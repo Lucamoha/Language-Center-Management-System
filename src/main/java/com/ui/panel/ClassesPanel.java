@@ -103,60 +103,26 @@ public class ClassesPanel extends JPanel {
     private void onAdd() {
         ClassDialog dlg = new ClassDialog(getParentFrame(), null);
         dlg.setVisible(true);
-        ClassDTO dto = dlg.getResult();
-        if (dto == null)
-            return;
 
-        new SwingWorker<Class, Void>() {
-            @Override
-            protected Class doInBackground() {
-                return service.save(dto);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    MessageBox.info(ClassesPanel.this, "Thêm lớp học thành công.");
-                    loadData(null);
-                } catch (Exception ex) {
-                    handleException(ex);
-                }
-            }
-        }.execute();
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
     }
 
     private void onEdit() {
         int row = table.getSelectedRow();
         if (row < 0) {
-            MessageBox.warn(this, "Vui lòng chọn một khóa học để sửa.");
+            MessageBox.warn(this, "Vui lòng chọn một lớp học để sửa.");
             return;
         }
         Class selected = model.getRow(row);
 
         ClassDialog dlg = new ClassDialog(getParentFrame(), selected);
         dlg.setVisible(true);
-        ClassDTO dto = dlg.getResult();
-        if (dto == null)
-            return;
 
-        new SwingWorker<Class, Void>() {
-            @Override
-            protected Class doInBackground() {
-                return service.update(selected.getClassID(), dto);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    MessageBox.info(ClassesPanel.this, "Cập nhật khóa học thành công.");
-                    loadData(null);
-                } catch (Exception ex) {
-                    handleException(ex);
-                }
-            }
-        }.execute();
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
     }
 
     private void onDelete() {
@@ -225,7 +191,7 @@ public class ClassesPanel extends JPanel {
         if (cause instanceof com.exception.ValidationException || cause instanceof com.exception.BusinessException) {
             MessageBox.warn(this, ((AppException) cause).getUserMessage());
         } else {
-            log.error("Error in CoursesPanel", cause);
+            log.error("Error in ClassPanel", cause);
             MessageBox.error(this, "Lỗi hệ thống: " + cause.getMessage());
         }
     }
