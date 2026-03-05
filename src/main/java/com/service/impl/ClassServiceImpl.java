@@ -18,7 +18,6 @@ import java.util.Optional;
 
 public class ClassServiceImpl {
     private final ClassRepository classRepo = new ClassRepository();
-    private final EnrollmentRepository enrollmentRepo = new EnrollmentRepository();
     private final CourseRepository courseRepo = new CourseRepository();
     private final TeacherRepository teacherRepo = new TeacherRepository();
     private final RoomRepository roomRepo = new RoomRepository();
@@ -80,7 +79,7 @@ public class ClassServiceImpl {
     }
 
     public Class update(Long id, ClassDTO dto) throws Exception {
-        PermissionChecker.requireAdminOrAnyStaff();
+        PermissionChecker.requireAdminOrStaff(StaffRole.CONSULTANT);
         Class old = this.findById(id);
 
         if (dto.getClassName() == null || dto.getClassName().isBlank())
@@ -118,21 +117,5 @@ public class ClassServiceImpl {
     public void delete(Long id) {
         PermissionChecker.requireAdmin();
         classRepo.delete(id);
-    }
-
-    /**
-     * Enroll a student into a class, enforcing maxStudent limit.
-     */
-    public Enrollment enroll(Enrollment enrollment) {
-        PermissionChecker.requireAdminOrAnyStaff();
-        Long classId = enrollment.getAclass().getClassID();
-        Class aClass = classRepo.findById(classId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy lớp học."));
-        long current = enrollmentRepo.countByClass(classId);
-        if (aClass.getMaxStudent() > 0 && current >= aClass.getMaxStudent()) {
-            throw new BusinessException(
-                    "Lớp học đã đủ số học viên tối đa (" + aClass.getMaxStudent() + " người).");
-        }
-        return enrollmentRepo.save(enrollment);
     }
 }

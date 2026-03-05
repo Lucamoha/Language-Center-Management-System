@@ -1,6 +1,7 @@
 package com.repository;
 
 import com.exception.SystemException;
+import com.model.academic.Class;
 import com.model.academic.Enrollment;
 import jakarta.persistence.EntityManager;
 
