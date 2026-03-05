@@ -138,14 +138,14 @@ public class ClassDialog extends JDialog {
         try {
             startDate = LocalDate.parse(tfStartDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
-            warn("Ngày bắt đầu không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy)! và phải là ngày, tháng, năm hợp lệ!)");
+            warn("Ngày bắt đầu không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
             return;
         }
 
         try {
             endDate = LocalDate.parse(tfEndDate.getText().trim(), formatter);
         } catch (DateTimeParseException e) {
-            warn("Ngày kết thúc không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy)! và phải là ngày, tháng, năm hợp lệ!)");
+            warn("Ngày kết thúc không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
             return;
         }
 

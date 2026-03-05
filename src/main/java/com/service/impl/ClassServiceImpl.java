@@ -116,7 +116,7 @@ public class ClassServiceImpl {
     }
 
     public void delete(Long id) {
-        PermissionChecker.requireAdminOrStaff(StaffRole.CONSULTANT);
+        PermissionChecker.requireAdmin();
         classRepo.delete(id);
     }
 
