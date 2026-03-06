@@ -19,7 +19,12 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
     public List<Schedule> findAll() {
         try (EntityManager em = em()) {
             return em.createQuery(
-                    "SELECT s FROM Schedule s LEFT JOIN FETCH s.aClass LEFT JOIN FETCH s.room ORDER BY s.date, s.startTime",
+                    "SELECT s FROM Schedule s " +
+                            "LEFT JOIN FETCH s.aClass c " +
+                            "LEFT JOIN FETCH s.room " +
+                            "LEFT JOIN FETCH c.enrollments e " +
+                            "LEFT JOIN FETCH e.student " +
+                            "ORDER BY s.date, s.startTime",
                     Schedule.class).getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn lịch học: " + e.getMessage(), e);
@@ -29,7 +34,7 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
     /**
      * Finds any schedule for a given room on a given date that overlaps with
      * [startTime, endTime].
-     * Two intervals [a1,a2] and [b1,b2] overlap when a1 < b2 AND b1 < a2.
+     * Two intervals [a1,a2] and [b1,b2] overlap when a1 < b2 AND a2 > b1.
      */
     public List<Schedule> findOverlapping(Long roomId, LocalDate date,
             LocalTime startTime, LocalTime endTime) {

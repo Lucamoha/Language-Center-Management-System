@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -51,4 +52,7 @@ public class Class {
     @Column(name = "status")
     @Builder.Default
     ClassStatus status = ClassStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "aclass")
+    List<Enrollment> enrollments;
 }

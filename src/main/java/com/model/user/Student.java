@@ -1,5 +1,6 @@
 package com.model.user;
 
+import com.model.academic.Enrollment;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -7,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -53,4 +55,7 @@ public class Student {
     @Column(name = "status")
     @Builder.Default
     UserStatus status = UserStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "student")
+    List<Enrollment> enrollments;
 }

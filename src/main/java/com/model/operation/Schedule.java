@@ -1,13 +1,11 @@
 package com.model.operation;
 
 import com.model.academic.Class;
-import com.model.user.Student;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -17,7 +15,12 @@ import java.time.LocalTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "schedule")
+@Table(name = "schedule", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "unq_room_time_in_schedule",
+                columnNames = {"room_id", "date", "start_time", "end_time"}
+        )
+})
 public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS schedule (
     end_time TIME,
     FOREIGN KEY (class_id) REFERENCES class(class_id),
     FOREIGN KEY (room_id) REFERENCES room(room_id),
+    UNIQUE KEY unique_schedule (class_id, room_id, date, start_time, end_time)
     INDEX idx_class (class_id),
     INDEX idx_date (date)
 );

@@ -1,6 +1,5 @@
 package com.ui.panel;
 
-import com.dto.ClassDTO;
 import com.exception.AppException;
 import com.model.academic.Class;
 import com.security.CurrentUser;
