@@ -7,7 +7,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,7 +16,12 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "attendance")
+@Table(name = "attendance", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "unq_student_class_in_attendance",
+                columnNames = {"student_id", "class_id"}
+        )
+})
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,5 +45,6 @@ public class Attendance {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    AttendanceStatus status;
+    @Builder.Default
+    AttendanceStatus status = AttendanceStatus.PRESENT;
 }

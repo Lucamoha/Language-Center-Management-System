@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS enrollment (
     updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES student(student_id),
     FOREIGN KEY (class_id) REFERENCES class(class_id),
-    UNIQUE KEY unique_enrollment (student_id, class_id),
+    UNIQUE KEY unq_enrollment (student_id, class_id),
     INDEX idx_student (student_id),
     INDEX idx_class (class_id)
 );
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS result (
     comment TEXT,
     FOREIGN KEY (student_id) REFERENCES student(student_id),
     FOREIGN KEY (class_id) REFERENCES class(class_id),
-    UNIQUE KEY unique_result (student_id, class_id),
+    UNIQUE KEY unq_result (student_id, class_id),
     INDEX idx_student (student_id),
     INDEX idx_class (class_id)
 );
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS schedule (
     end_time TIME,
     FOREIGN KEY (class_id) REFERENCES class(class_id),
     FOREIGN KEY (room_id) REFERENCES room(room_id),
-    UNIQUE KEY unique_schedule (class_id, room_id, date, start_time, end_time)
+    UNIQUE KEY unq_schedule (class_id, room_id, date, start_time, end_time)
     INDEX idx_class (class_id),
     INDEX idx_date (date)
 );
@@ -167,6 +167,8 @@ CREATE TABLE IF NOT EXISTS attendance (
     status ENUM('PRESENT', 'EXCUSED', 'ABSENT', 'LATE'),
     FOREIGN KEY (student_id) REFERENCES student(student_id),
     FOREIGN KEY (class_id) REFERENCES class(class_id),
+    UNIQUE KEY unq_schedule (class_id, room_id, date, start_time, end_time),
+    UNIQUE KEY unq_student_class_in_attendance (student_id, class_id),
     INDEX idx_student (student_id),
     INDEX idx_class (class_id),
     INDEX idx_status (status)

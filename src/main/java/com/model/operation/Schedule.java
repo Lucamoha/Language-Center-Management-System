@@ -18,7 +18,7 @@ import java.time.LocalTime;
 @Table(name = "schedule", uniqueConstraints = {
         @UniqueConstraint(
                 name = "unq_room_time_in_schedule",
-                columnNames = {"room_id", "date", "start_time", "end_time"}
+                columnNames = {"class_id", "room_id", "date", "start_time", "end_time"}
         )
 })
 public class Schedule {
@@ -31,7 +31,7 @@ public class Schedule {
     @JoinColumn(name = "class_id", nullable = false)
     Class aClass;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
     Room room;
 

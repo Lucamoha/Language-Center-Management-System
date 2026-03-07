@@ -1,7 +1,202 @@
 package com.ui.panel;
 
-public class AttendancePanel extends ScaffoldPanel {
+import com.exception.AppException;
+import com.model.operation.Attendance;
+import com.security.CurrentUser;
+import com.security.SecurityContext;
+import com.service.impl.AttendanceServiceImpl;
+import com.ui.dialog.AttendanceDialog;
+import com.ui.table.AttendanceTableModel;
+import com.ui.util.MessageBox;
+import com.ui.util.UiUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+
+public class AttendancePanel extends JPanel {
+
+    private static final Logger log = LoggerFactory.getLogger(AttendancePanel.class);
+
+    private final AttendanceServiceImpl service = new AttendanceServiceImpl();
+    private final AttendanceTableModel model = new AttendanceTableModel();
+    private final JTable table = new JTable(model);
+    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã lớp...");
+    private final JButton btnAdd = UiUtil.primaryButton("Thêm");
+    private final JButton btnEdit = UiUtil.primaryButton("Sửa");
+    private final JButton btnDelete = UiUtil.dangerButton("Xóa");
+    private final JButton btnRefresh = new JButton("Làm mới");
+
     public AttendancePanel() {
-        super("Quản lý Điểm danh");
+        setLayout(new BorderLayout(10, 10));
+        setBackground(UiUtil.COLOR_BG);
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildTable(), BorderLayout.CENTER);
+        add(buildToolbar(), BorderLayout.SOUTH);
+
+        wireEvents();
+        applyRoleVisibility();
+        loadData(null);
+    }
+
+    // ---- builders ----
+
+    private JPanel buildHeader() {
+        JPanel p = new JPanel(new BorderLayout(10, 0));
+        p.setOpaque(false);
+        p.add(UiUtil.sectionTitle("Quản lý Điểm danh"), BorderLayout.WEST);
+
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        searchBar.setOpaque(false);
+        searchBar.add(new JLabel("Tìm kiếm:"));
+        searchBar.add(tfSearch);
+        JButton btnSearch = UiUtil.primaryButton("Tìm");
+        btnSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        searchBar.add(btnSearch);
+        p.add(searchBar, BorderLayout.EAST);
+        return p;
+    }
+
+    private JScrollPane buildTable() {
+        UiUtil.styleTable(table);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane sp = new JScrollPane(table);
+        sp.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        return sp;
+    }
+
+    private JPanel buildToolbar() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        p.setOpaque(false);
+        p.add(btnAdd);
+        p.add(btnEdit);
+        p.add(btnDelete);
+        p.add(btnRefresh);
+        return p;
+    }
+
+    // ---- role visibility ----
+
+    private void applyRoleVisibility() {
+        CurrentUser u = SecurityContext.get();
+        boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
+        btnAdd.setVisible(canWrite);
+        btnEdit.setVisible(canWrite);
+        btnDelete.setVisible(canWrite);
+    }
+
+    // ---- events ----
+
+    private void wireEvents() {
+        btnAdd.addActionListener(e -> onAdd());
+        btnEdit.addActionListener(e -> onEdit());
+        btnDelete.addActionListener(e -> onDelete());
+        btnRefresh.addActionListener(e -> loadData(null));
+        tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+    }
+
+    private void onAdd() {
+        AttendanceDialog dlg = new AttendanceDialog(getParentFrame(), null);
+        dlg.setVisible(true);
+
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
+    }
+
+    private void onEdit() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            MessageBox.warn(this, "Vui lòng chọn một lịch sử điểm danh để sửa.");
+            return;
+        }
+        Attendance selected = model.getRow(row);
+
+        AttendanceDialog dlg = new AttendanceDialog(getParentFrame(), selected);
+        dlg.setVisible(true);
+
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
+    }
+
+    private void onDelete() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            MessageBox.warn(this, "Vui lòng chọn một lịch sử điểm danh để xóa.");
+            return;
+        }
+        Attendance selected = model.getRow(row);
+
+        if (!MessageBox.confirm(this, "Bạn có chắc muốn xóa lịch sử điểm danh có mã: " + selected.getAttendanceID() + "?"))
+            return;
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                service.delete(selected.getAttendanceID());
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    MessageBox.info(AttendancePanel.this, "Đã xóa lịch sử điểm danh.");
+                    loadData(null);
+                } catch (Exception ex) {
+                    handleException(ex);
+                }
+            }
+        }.execute();
+    }
+
+    private void loadData(String keyword) {
+        btnAdd.setEnabled(false);
+        btnEdit.setEnabled(false);
+        btnDelete.setEnabled(false);
+
+        new SwingWorker<java.util.List<Attendance>, Void>() {
+            @Override
+            protected List<Attendance> doInBackground() {
+                return (keyword == null || keyword.isBlank())
+                        ? service.findAll()
+                        : service.search(keyword);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    model.setData(get());
+                } catch (Exception ex) {
+                    handleException(ex);
+                } finally {
+                    CurrentUser u = SecurityContext.get();
+                    boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
+                    btnAdd.setEnabled(canWrite);
+                    btnEdit.setEnabled(canWrite);
+                    btnDelete.setEnabled(canWrite);
+                }
+            }
+        }.execute();
+    }
+
+    private void handleException(Exception ex) {
+        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+        if (cause instanceof com.exception.ValidationException || cause instanceof com.exception.BusinessException) {
+            MessageBox.warn(this, ((AppException) cause).getUserMessage());
+        } else {
+            log.error("Error in AttendancePanel", cause);
+            MessageBox.error(this, "Lỗi hệ thống: " + cause.getMessage());
+        }
+    }
+
+    private Frame getParentFrame() {
+        return (Frame) SwingUtilities.getWindowAncestor(this);
     }
 }
+
