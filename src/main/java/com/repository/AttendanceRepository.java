@@ -2,9 +2,10 @@ package com.repository;
 
 import com.exception.SystemException;
 import com.model.operation.Attendance;
+import com.model.user.UserRole;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public class AttendanceRepository extends BaseRepository<Attendance, Long> {
@@ -27,13 +28,27 @@ public class AttendanceRepository extends BaseRepository<Attendance, Long> {
         }
     }
 
-    public List<Attendance> findByClass(Long classId) {
+    public List<Attendance> findByClassAndUser(Long classId, Long relatedId, UserRole userRole) {
         try (EntityManager em = em()) {
-            return em.createQuery(
-                            "SELECT a FROM Attendance a WHERE a.aClass.classID = :cid ORDER BY a.createdAt DESC",
-                            Attendance.class)
-                    .setParameter("cid", classId)
-                    .getResultList();
+            String jpql = "SELECT a FROM Attendance a " +
+                    "WHERE a.aClass.classID = :cid ";
+            boolean hasUid = false;
+            if (userRole == UserRole.STUDENT) {
+                jpql += "AND a.student.studentID = :uid ";
+                hasUid = true;
+            } else if (userRole == UserRole.TEACHER) {
+                jpql += "AND a.aClass.teacher.teacherID = :uid ";
+                hasUid = true;
+            }
+            jpql += "ORDER BY a.createdAt DESC";
+
+            TypedQuery<Attendance> typedQuery = em.createQuery(jpql, Attendance.class)
+                    .setParameter("cid", classId);
+            if (hasUid) {
+                typedQuery.setParameter("uid", relatedId);
+                // do role khác teacher và student thì hàm này không có uid (không có giới hạn tìm kiếm)
+            }
+            return typedQuery.getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn điểm danh theo lớp: " + e.getMessage(), e);
         }
@@ -48,23 +63,6 @@ public class AttendanceRepository extends BaseRepository<Attendance, Long> {
                     .getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn điểm danh theo học viên: " + e.getMessage(), e);
-        }
-    }
-
-    public List<Attendance> findOverlapping(Long classId, Long studentId, LocalDate date) {
-        try (EntityManager em = em()) {
-            return em.createQuery(
-                            "SELECT a FROM Attendance a " +
-                                    "WHERE a.aClass.classID = :cid " +
-                                    "AND a.student.studentID = :sid " +
-                                    "AND a.date = :date",
-                            Attendance.class)
-                    .setParameter("cid", classId)
-                    .setParameter("sid", studentId)
-                    .setParameter("date", date)
-                    .getResultList();
-        } catch (Exception e) {
-            throw new SystemException("Lỗi kiểm tra trùng điểm danh: " + e.getMessage(), e);
         }
     }
 }

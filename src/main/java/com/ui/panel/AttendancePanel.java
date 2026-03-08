@@ -23,7 +23,7 @@ public class AttendancePanel extends JPanel {
     private final AttendanceServiceImpl service = new AttendanceServiceImpl();
     private final AttendanceTableModel model = new AttendanceTableModel();
     private final JTable table = new JTable(model);
-    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã lớp...");
+    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã lớp ...");
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
     private final JButton btnRefresh = new JButton("Làm mới");
 
@@ -111,11 +111,12 @@ public class AttendancePanel extends JPanel {
         btnEdit.setEnabled(false);
 
         new SwingWorker<java.util.List<Attendance>, Void>() {
+            final CurrentUser u = SecurityContext.get();
             @Override
             protected List<Attendance> doInBackground() {
                 return (keyword == null || keyword.isBlank())
                         ? service.findAll()
-                        : service.search(keyword);
+                        : service.search(keyword, u.relatedId(), u.role());
             }
 
             @Override

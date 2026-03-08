@@ -3,6 +3,7 @@ package com.service.impl;
 import com.dto.AttendanceDTO;
 import com.exception.BusinessException;
 import com.model.operation.Attendance;
+import com.model.user.UserRole;
 import com.repository.AttendanceRepository;
 import com.security.PermissionChecker;
 
@@ -45,8 +46,8 @@ public class AttendanceServiceImpl {
         return repo.update(old.get());
     }
 
-    public List<Attendance> search(String keyword) {
+    public List<Attendance> search(String keyword, Long userId, UserRole userRole) {
         PermissionChecker.requireAuthenticated();
-        return repo.findByClass(Long.parseLong(keyword));
+        return repo.findByClassAndUser(Long.parseLong(keyword), userId, userRole);
     }
 }
