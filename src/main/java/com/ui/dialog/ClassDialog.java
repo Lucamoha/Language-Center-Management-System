@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class ClassDialog extends JDialog {
-    private Class existing = null;
+    private final Class existing;
     @Getter
     private boolean isSuccess;
     private final ClassServiceImpl service = new ClassServiceImpl();

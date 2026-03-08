@@ -162,15 +162,18 @@ CREATE TABLE IF NOT EXISTS attendance (
     attendance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     class_id BIGINT NOT NULL,
     student_id BIGINT NOT NULL,
+    schedule_id BIGINT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
-    status ENUM('PRESENT', 'EXCUSED', 'ABSENT', 'LATE'),
+    status ENUM('PRESENT', 'EXCUSED', 'ABSENT', 'LATE') DEFAULT 'PRESENT',
     FOREIGN KEY (student_id) REFERENCES student(student_id),
     FOREIGN KEY (class_id) REFERENCES class(class_id),
-    UNIQUE KEY unq_attendance (class_id, student_id),
+    FOREIGN KEY (schedule_id) REFERENCES schedule(schedule_id) ON DELETE CASCADE,
+    UNIQUE KEY unq_attendance (schedule_id, student_id),
     INDEX idx_student (student_id),
     INDEX idx_class (class_id),
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    INDEX idx_schedule (schedule_id)
 );
 
 -- ================================================

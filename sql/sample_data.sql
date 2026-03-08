@@ -109,17 +109,17 @@ VALUES (1, 1, '2026-02-15 10:00:00', '2026-02-15 10:00:00'),
        (9, 2, '2026-02-23 14:30:00', '2026-02-23 14:30:00'),
        (10, 9, '2026-02-24 09:30:00', '2026-02-24 09:30:00');
 
-INSERT INTO result (student_id, class_id, score, comment)
-VALUES (1, 1, 7.5, 'Học sinh chăm chỉ, có tiến bộ rõ rệt'),
-       (2, 2, 8.0, 'Xuất sắc về kỹ năng nghe và nói'),
-       (3, 3, 8.5, 'Rất giỏi, sẵn sàng cho kỳ thi IELTS'),
-       (4, 4, 7.0, 'Cần cải thiện kỹ năng đọc'),
-       (5, 5, 7.8, 'Tiến bộ tốt, đạt các mục tiêu của khóa'),
-       (6, 7, 7.2, 'Nên tập trung vào phát âm'),
-       (7, 8, 8.2, 'Rất tốt về sử dụng từ vựng kinh doanh'),
-       (8, 1, 6.8, 'Cần ôn lại các kiến thức cơ bản'),
-       (9, 2, 8.1, 'Xuất sắc, có thể nghiên cứu thêm'),
-       (10, 9, 7.6, 'Tốt, sẵn sàng bước sang level cao hơn');
+-- INSERT INTO result (student_id, class_id, score, comment)
+-- VALUES (1, 1, 7.5, 'Học sinh chăm chỉ, có tiến bộ rõ rệt'),
+--        (2, 2, 8.0, 'Xuất sắc về kỹ năng nghe và nói'),
+--        (3, 3, 8.5, 'Rất giỏi, sẵn sàng cho kỳ thi IELTS'),
+--        (4, 4, 7.0, 'Cần cải thiện kỹ năng đọc'),
+--        (5, 5, 7.8, 'Tiến bộ tốt, đạt các mục tiêu của khóa'),
+--        (6, 7, 7.2, 'Nên tập trung vào phát âm'),
+--        (7, 8, 8.2, 'Rất tốt về sử dụng từ vựng kinh doanh'),
+--        (8, 1, 6.8, 'Cần ôn lại các kiến thức cơ bản'),
+--        (9, 2, 8.1, 'Xuất sắc, có thể nghiên cứu thêm'),
+--        (10, 9, 7.6, 'Tốt, sẵn sàng bước sang level cao hơn');
 
 INSERT INTO schedule (class_id, room_id, schedule_date, start_time, end_time)
 VALUES (1, 1, '2026-02-01', '08:00:00', '10:00:00'),

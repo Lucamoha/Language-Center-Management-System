@@ -42,6 +42,15 @@ public class EnrollmentServiceImpl {
      */
     public Enrollment save(EnrollmentDTO dto) {
         CurrentUser user = PermissionChecker.requireAuthenticated();
+        
+        // Validate DTO
+        if (dto.getStudentID() == null || dto.getStudentID() <= 0) {
+            throw new BusinessException("Mã học viên không hợp lệ!");
+        }
+        if (dto.getClassID() == null || dto.getClassID() <= 0) {
+            throw new BusinessException("Mã lớp học không hợp lệ!");
+        }
+        
         Student aStudent = studentRepo.findById(dto.getStudentID())
                 .orElseThrow(() -> new BusinessException("Mã học viên không tồn tại! Hãy nhập mã học viên khác!"));
         if(aStudent.getStatus() != UserStatus.ACTIVE)
@@ -61,9 +70,10 @@ public class EnrollmentServiceImpl {
                     "Bạn không có quyền đăng ký lớp học!");
         }
 
-        Enrollment enrollment = new Enrollment();
-        enrollment.setAclass(aClass);
-        enrollment.setStudent(aStudent);
+        Enrollment enrollment = Enrollment.builder()
+                .aclass(aClass)
+                .student(aStudent)
+                .build();
 
         try {
             return enrollmentRepo.save(enrollment);

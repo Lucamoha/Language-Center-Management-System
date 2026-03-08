@@ -26,6 +26,7 @@ public abstract class BaseRepository<T, ID> {
         try {
             tx.begin();
             em.persist(entity);
+            em.flush();  // Force Hibernate to execute INSERT and validate relationships
             tx.commit();
             return entity;
         } catch (Exception e) {
@@ -43,6 +44,7 @@ public abstract class BaseRepository<T, ID> {
         try {
             tx.begin();
             T merged = em.merge(entity);
+            em.flush();  // Force Hibernate to execute UPDATE and validate relationships
             tx.commit();
             return merged;
         } catch (Exception e) {

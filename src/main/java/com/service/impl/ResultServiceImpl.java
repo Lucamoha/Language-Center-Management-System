@@ -1,24 +1,25 @@
 package com.service.impl;
 
+import com.dto.ResultDTO;
 import com.exception.BusinessException;
 import com.model.academic.Result;
+import com.model.user.UserRole;
 import com.repository.ResultRepository;
 import com.security.PermissionChecker;
+import com.stream.ResultStreamQueries;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ResultServiceImpl {
     private final ResultRepository repo = new ResultRepository();
+    private final ResultStreamQueries resultStreamQueries = new ResultStreamQueries();
 
     public List<Result> findAll() {
         var u = PermissionChecker.requireAuthenticated();
         if (u.isTeacher()) {
             Long tid = u.relatedId();
-            return repo.findAll().stream()
-                    .filter(r -> r.getAClass() != null
-                            && r.getAClass().getTeacher() != null
-                            && r.getAClass().getTeacher().getTeacherID().equals(tid))
-                    .toList();
+            return resultStreamQueries.filterResultsByTeacherID(repo.findAll(), tid);
         }
         if (u.isStudent()) {
             Long sid = u.relatedId();
@@ -27,28 +28,31 @@ public class ResultServiceImpl {
         return repo.findAll();
     }
 
-    public Result save(Result result) {
-        var u = PermissionChecker.requireAuthenticated();
-        if (!u.isAdmin() && !u.isTeacher())
-            throw new BusinessException("Chỉ giáo viên hoặc admin mới có thể nhập điểm.");
-        if (u.isTeacher()) {
-            Long tid = u.relatedId();
-            if (result.getAClass() == null || result.getAClass().getTeacher() == null
-                    || !result.getAClass().getTeacher().getTeacherID().equals(tid))
-                throw new BusinessException("Bạn chỉ được nhập điểm cho lớp mình dạy.");
-        }
-        return repo.save(result);
-    }
-
-    public Result update(Result result) {
+    public Result update(ResultDTO dto) throws Exception {
         var u = PermissionChecker.requireAuthenticated();
         if (!u.isAdmin() && !u.isTeacher())
             throw new BusinessException("Chỉ giáo viên hoặc admin mới có thể sửa điểm.");
-        return repo.update(result);
+        Optional<Result> result = repo.findById(dto.getResultID());
+        if(result.isEmpty())
+            throw new  BusinessException("Không tìm thấy lịch sử chấm điểm!");
+        if (u.isTeacher()) {
+            Long tid = u.relatedId();
+            if (result.get().getAClass() == null || result.get().getAClass().getTeacher() == null
+                    || !result.get().getAClass().getTeacher().getTeacherID().equals(tid))
+                throw new BusinessException("Bạn chỉ được nhập điểm cho lớp mình dạy.");
+        }
+        Result r = result.get();
+        r.setScore(dto.getScore());
+        r.setComment(dto.getComment());
+        return repo.update(r);
     }
 
-    public void delete(Long id) {
-        PermissionChecker.requireAdmin();
-        repo.delete(id);
+    public List<Result> search(String classId, Long userId, UserRole userRole) {
+        PermissionChecker.requireAuthenticated();
+        try {
+            return repo.findByClassAndUser(Long.parseLong(classId), userId, userRole);
+        } catch (Exception e) {
+            throw new BusinessException("Mã lớp học không hợp lệ!");
+        }
     }
 }

@@ -28,7 +28,7 @@ public class AttendanceRepository extends BaseRepository<Attendance, Long> {
         }
     }
 
-    public List<Attendance> findByClassAndUser(Long classId, Long relatedId, UserRole userRole) {
+    public List<Attendance> findByClassAndUser(Long classId, Long userId, UserRole userRole) {
         try (EntityManager em = em()) {
             String jpql = "SELECT a FROM Attendance a " +
                     "WHERE a.aClass.classID = :cid ";
@@ -45,7 +45,7 @@ public class AttendanceRepository extends BaseRepository<Attendance, Long> {
             TypedQuery<Attendance> typedQuery = em.createQuery(jpql, Attendance.class)
                     .setParameter("cid", classId);
             if (hasUid) {
-                typedQuery.setParameter("uid", relatedId);
+                typedQuery.setParameter("uid", userId);
                 // do role khác teacher và student thì hàm này không có uid (không có giới hạn tìm kiếm)
             }
             return typedQuery.getResultList();

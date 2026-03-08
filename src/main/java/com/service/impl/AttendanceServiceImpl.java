@@ -46,8 +46,12 @@ public class AttendanceServiceImpl {
         return repo.update(old.get());
     }
 
-    public List<Attendance> search(String keyword, Long userId, UserRole userRole) {
+    public List<Attendance> search(String classId, Long userId, UserRole userRole) {
         PermissionChecker.requireAuthenticated();
-        return repo.findByClassAndUser(Long.parseLong(keyword), userId, userRole);
+        try {
+            return repo.findByClassAndUser(Long.parseLong(classId), userId, userRole);
+        } catch (Exception e) {
+            throw new BusinessException("Mã lớp học không hợp lệ!");
+        }
     }
 }
