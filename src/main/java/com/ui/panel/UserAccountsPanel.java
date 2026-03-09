@@ -4,8 +4,6 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.exception.AppException;
 import com.model.user.UserAccount;
 import com.model.user.UserRole;
-import com.model.user.UserStatus;
-import com.security.PermissionChecker;
 import com.service.impl.UserAccountServiceImpl;
 import com.stream.UserAccountStreamQueries;
 import com.ui.util.MessageBox;
@@ -148,7 +146,6 @@ public class UserAccountsPanel extends JPanel {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                PermissionChecker.requireAdmin();
                 String hashed = BCrypt.withDefaults().hashToString(12, newPwd.toCharArray());
                 selected.setPasswordHash(hashed);
                 service.update(selected);
@@ -175,7 +172,6 @@ public class UserAccountsPanel extends JPanel {
         new SwingWorker<List<UserAccount>, Void>() {
             @Override
             protected List<UserAccount> doInBackground() {
-                PermissionChecker.requireAdmin();
                 List<UserAccount> all = service.findAll();
 
                 // filter by role

@@ -4,9 +4,11 @@ import com.dto.StudentDTO;
 import com.exception.AppException;
 
 import com.model.user.Student;
+import com.model.user.UserStatus;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.StudentServiceImpl;
+import com.stream.StudentStreamQueries;
 import com.ui.dialog.StudentDialog;
 import com.ui.table.StudentTableModel;
 import com.ui.util.MessageBox;
@@ -30,6 +32,24 @@ public class StudentsPanel extends JPanel {
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
     private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
+    private final JComboBox<UserStatus> cbStatus = buildStatusComboBox();
+
+    private static JComboBox<UserStatus> buildStatusComboBox() {
+        JComboBox<UserStatus> cb = new JComboBox<>();
+        cb.addItem(null); // "Tất cả"
+        for (UserStatus r : UserStatus.values())
+            cb.addItem(r);
+        cb.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Tất cả" : value.toString());
+                return this;
+            }
+        });
+        return cb;
+    }
 
     public StudentsPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -54,6 +74,8 @@ public class StudentsPanel extends JPanel {
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
+        searchBar.add(new JLabel("Trạng thái:"));
+        searchBar.add(cbStatus);
         searchBar.add(new JLabel("Tìm kiếm:"));
         searchBar.add(tfSearch);
         JButton btnSearch = UiUtil.primaryButton("Tìm");
@@ -97,8 +119,13 @@ public class StudentsPanel extends JPanel {
         btnAdd.addActionListener(e -> onAdd());
         btnEdit.addActionListener(e -> onEdit());
         btnDelete.addActionListener(e -> onDelete());
-        btnRefresh.addActionListener(e -> loadData(null));
+        btnRefresh.addActionListener(e -> {
+            tfSearch.setText("");
+            cbStatus.setSelectedItem(null);
+            loadData(null);
+        });
         tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        cbStatus.addActionListener(e -> loadData(tfSearch.getText().trim()));
     }
 
     private void onAdd() {
@@ -195,13 +222,22 @@ public class StudentsPanel extends JPanel {
         btnAdd.setEnabled(false);
         btnEdit.setEnabled(false);
         btnDelete.setEnabled(false);
+        UserStatus selectedStatus = (UserStatus) cbStatus.getSelectedItem();
 
         new SwingWorker<List<Student>, Void>() {
             @Override
             protected List<Student> doInBackground() {
-                return (keyword == null || keyword.isBlank())
-                        ? service.findAll()
-                        : service.search(keyword);
+                List<Student> all = service.findAll();
+
+                // filter by status
+                if (selectedStatus != null)
+                    all = StudentStreamQueries.filterByStatus(all, selectedStatus);
+
+                // filter by keyword
+                if (keyword != null && !keyword.isBlank())
+                    all = StudentStreamQueries.search(all, keyword);
+
+                return all;
             }
 
             @Override

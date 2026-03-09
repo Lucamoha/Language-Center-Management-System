@@ -2,10 +2,13 @@ package com.ui.panel;
 
 import com.dto.TeacherDTO;
 import com.exception.AppException;
+import com.model.user.Specialty;
 import com.model.user.Teacher;
+import com.model.user.UserStatus;
 import com.security.SecurityContext;
 import com.security.CurrentUser;
 import com.service.impl.TeacherServiceImpl;
+import com.stream.TeacherStreamQueries;
 import com.ui.dialog.TeacherDialog;
 import com.ui.table.TeacherTableModel;
 import com.ui.util.MessageBox;
@@ -29,6 +32,51 @@ public class TeachersPanel extends JPanel {
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
     private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
+    private JComboBox<UserStatus> cbStatus = buildStatusComboBox();
+    private JComboBox<Specialty> cbSpecialty = buildSpecialtyComboBox();
+    private boolean isResetting = false;
+
+    private static JComboBox<UserStatus> buildStatusComboBox() {
+        JComboBox<UserStatus> cbStatus = new JComboBox<>();
+
+        cbStatus.addItem(null); // "Tất cả"
+
+        for (UserStatus r : UserStatus.values())
+            cbStatus.addItem(r);
+
+        cbStatus.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Tất cả" : value.toString());
+                return this;
+            }
+        });
+
+        return cbStatus;
+    }
+
+    private static JComboBox<Specialty> buildSpecialtyComboBox() {
+        JComboBox<Specialty> cbSpecialty = new JComboBox<>();
+
+        cbSpecialty.addItem(null); // "Tất cả"
+
+        for (Specialty s : Specialty.values())
+            cbSpecialty.addItem(s);
+
+        cbSpecialty.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Tất cả" : value.toString());
+                return this;
+            }
+        });
+
+        return cbSpecialty;
+    }
 
     public TeachersPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -51,6 +99,10 @@ public class TeachersPanel extends JPanel {
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
+        searchBar.add(new JLabel("Chuyên môn:"));
+        searchBar.add(cbSpecialty);
+        searchBar.add(new JLabel("Trạng thái:"));
+        searchBar.add(cbStatus);
         searchBar.add(new JLabel("Tìm kiếm:"));
         searchBar.add(tfSearch);
         JButton btnSearch = UiUtil.primaryButton("Tìm");
@@ -91,8 +143,35 @@ public class TeachersPanel extends JPanel {
         btnAdd.addActionListener(e -> onAdd());
         btnEdit.addActionListener(e -> onEdit());
         btnDelete.addActionListener(e -> onDelete());
-        btnRefresh.addActionListener(e -> loadData(null));
-        tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        btnRefresh.addActionListener(e -> {
+            isResetting = true;
+            try {
+                tfSearch.setText("");
+                cbStatus.setSelectedItem(null);
+                cbSpecialty.setSelectedItem(null);
+            } finally {
+                isResetting = false;
+            }
+            loadData(null);
+        });
+
+        tfSearch.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
+
+        cbStatus.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
+
+        cbSpecialty.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
     }
 
     private void onAdd() {
@@ -188,13 +267,27 @@ public class TeachersPanel extends JPanel {
         btnAdd.setEnabled(false);
         btnEdit.setEnabled(false);
         btnDelete.setEnabled(false);
+        UserStatus selectedStatus = (UserStatus) cbStatus.getSelectedItem();
+        Specialty selectedSpecialty = (Specialty) cbSpecialty.getSelectedItem();
 
         new SwingWorker<List<Teacher>, Void>() {
             @Override
             protected List<Teacher> doInBackground() {
-                return (keyword == null || keyword.isBlank())
-                        ? service.findAll()
-                        : service.search(keyword);
+                List<Teacher> all = service.findAll();
+
+                // filter by status
+                if (selectedStatus != null)
+                    all = TeacherStreamQueries.filterByStatus(all, selectedStatus);
+
+                // filter by specialty
+                if (selectedSpecialty != null)
+                    all = TeacherStreamQueries.filterBySpecialty(all, selectedSpecialty);
+
+                // filter by keyword
+                if (keyword != null && !keyword.isBlank())
+                    all = TeacherStreamQueries.search(all, keyword);
+
+                return all;
             }
 
             @Override

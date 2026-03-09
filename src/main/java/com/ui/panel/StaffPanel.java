@@ -2,10 +2,11 @@ package com.ui.panel;
 
 import com.dto.StaffDTO;
 import com.exception.AppException;
-import com.model.user.Staff;
+import com.model.user.*;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.StaffServiceImpl;
+import com.stream.StaffStreamQueries;
 import com.ui.dialog.StaffDialog;
 import com.ui.table.StaffTableModel;
 import com.ui.util.MessageBox;
@@ -29,6 +30,51 @@ public class StaffPanel extends JPanel {
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
     private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
+    private JComboBox<UserStatus> cbStatus = buildStatusComboBox();
+    private JComboBox<StaffRole> cbStaffRoles = buildStaffRolesComboBox();
+    private boolean isResetting = false;
+
+    private static JComboBox<UserStatus> buildStatusComboBox() {
+        JComboBox<UserStatus> cbStatus = new JComboBox<>();
+
+        cbStatus.addItem(null); // "Tất cả"
+
+        for (UserStatus r : UserStatus.values())
+            cbStatus.addItem(r);
+
+        cbStatus.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Tất cả" : value.toString());
+                return this;
+            }
+        });
+
+        return cbStatus;
+    }
+
+    private static JComboBox<StaffRole> buildStaffRolesComboBox() {
+        JComboBox<StaffRole> cbStaffRoles = new JComboBox<>();
+
+        cbStaffRoles.addItem(null); // "Tất cả"
+
+        for (StaffRole s : StaffRole.values())
+            cbStaffRoles.addItem(s);
+
+        cbStaffRoles.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Tất cả" : value.toString());
+                return this;
+            }
+        });
+
+        return cbStaffRoles;
+    }
 
     public StaffPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -50,6 +96,10 @@ public class StaffPanel extends JPanel {
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
+        searchBar.add(new JLabel("Vai trò:"));
+        searchBar.add(cbStaffRoles);
+        searchBar.add(new JLabel("Trạng thái:"));
+        searchBar.add(cbStatus);
         searchBar.add(new JLabel("Tìm kiếm:"));
         searchBar.add(tfSearch);
         JButton btnSearch = UiUtil.primaryButton("Tìm");
@@ -81,8 +131,35 @@ public class StaffPanel extends JPanel {
         btnAdd.addActionListener(e -> onAdd());
         btnEdit.addActionListener(e -> onEdit());
         btnDelete.addActionListener(e -> onDelete());
-        btnRefresh.addActionListener(e -> loadData(null));
-        tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        btnRefresh.addActionListener(e -> {
+            isResetting = true;
+            try {
+                tfSearch.setText("");
+                cbStatus.setSelectedItem(null);
+                cbStaffRoles.setSelectedItem(null);
+            } finally {
+                isResetting = false;
+            }
+            loadData(null);
+        });
+
+        tfSearch.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
+
+        cbStatus.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
+
+        cbStaffRoles.addActionListener(e -> {
+            if (!isResetting) {
+                loadData(tfSearch.getText().trim());
+            }
+        });
     }
 
     private void onAdd() {
@@ -178,13 +255,27 @@ public class StaffPanel extends JPanel {
         btnAdd.setEnabled(false);
         btnEdit.setEnabled(false);
         btnDelete.setEnabled(false);
+        UserStatus selectedStatus = (UserStatus) cbStatus.getSelectedItem();
+        StaffRole selectedStaffRole = (StaffRole) cbStaffRoles.getSelectedItem();
 
         new SwingWorker<List<Staff>, Void>() {
             @Override
             protected List<Staff> doInBackground() {
-                return (keyword == null || keyword.isBlank())
-                        ? service.findAll()
-                        : service.search(keyword);
+                List<Staff> all = service.findAll();
+
+                // filter by status
+                if (selectedStatus != null)
+                    all = StaffStreamQueries.filterByStatus(all, selectedStatus);
+
+                // filter by specialty
+                if (selectedStaffRole != null)
+                    all = StaffStreamQueries.filterByRole(all, selectedStaffRole);
+
+                // filter by keyword
+                if (keyword != null && !keyword.isBlank())
+                    all = StaffStreamQueries.search(all, keyword);
+
+                return all;
             }
 
             @Override
