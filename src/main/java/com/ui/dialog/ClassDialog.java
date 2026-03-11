@@ -1,21 +1,27 @@
 package com.ui.dialog;
 
+import com.model.operation.Period;
+import com.model.operation.Schedule;
+import com.service.impl.ScheduleServiceImpl;
+import com.toedter.calendar.JDateChooser;
+
 import com.dto.ClassDTO;
 import com.model.academic.Class;
 import com.model.academic.ClassStatus;
 import com.model.academic.Course;
 import com.service.impl.ClassServiceImpl;
 import com.service.impl.CourseServiceImpl;
-import com.ui.util.JTextFieldPlaceholder;
+
+import java.time.LocalDate;
+
 import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
 import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.List;
 
 public class ClassDialog extends JDialog {
@@ -24,18 +30,19 @@ public class ClassDialog extends JDialog {
     private boolean isSuccess;
     private final ClassServiceImpl service = new ClassServiceImpl();
     private final CourseServiceImpl courseService = new CourseServiceImpl();
+    private final ScheduleServiceImpl scheduleService = new ScheduleServiceImpl();
 
     // Information Fields
     private final JTextField tfName = new JTextField(25);
     private final JTextField tfMaxStudent = new JTextField(25);
-    private final JTextFieldPlaceholder tfStartDate = new JTextFieldPlaceholder("dd/MM/yyyy");
-    private final JTextFieldPlaceholder tfEndDate = new JTextFieldPlaceholder("dd/MM/yyyy");
     private final JComboBox<ClassStatus> cbStatus = new JComboBox<>(ClassStatus.values());
     private final JComboBox<Course> cbCourse = new JComboBox<>();
     private final JTextField tfRoomID = new JTextField(30);
     private final JTextField tfTeacherID = new JTextField(30);
-
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final List<JCheckBox> weekdaysCheckBoxes = new ArrayList<>();
+    private final ButtonGroup periodGroup = new ButtonGroup();
+    private final List<JRadioButton> periodRadioButtons = new ArrayList<>();
+    private JDateChooser dtcStartDate;
 
     public ClassDialog(Frame parent, Class existing) {
         super(parent, existing == null ? "Thêm lớp học" : "Sửa lớp học", true);
@@ -43,12 +50,12 @@ public class ClassDialog extends JDialog {
 
         loadCourseData();
 
-        if (existing != null)
-            prefill(existing);
-
         setLayout(new BorderLayout(10, 10));
         add(buildForm(), BorderLayout.CENTER);
         add(buildButtons(), BorderLayout.SOUTH);
+
+        if (existing != null)
+            prefill(existing);
 
         pack();
         setResizable(false);
@@ -69,17 +76,30 @@ public class ClassDialog extends JDialog {
         c.insets = new Insets(4, 5, 4, 5);
         c.fill = GridBagConstraints.HORIZONTAL;
 
+        dtcStartDate = new JDateChooser();
+        dtcStartDate.setDateFormatString("dd/MM/yyyy");
+        // Vô hiệu hóa khả năng chỉnh sửa của ô Text, chỉ cho phép chọn từ Button lịch
+        ((JTextField) dtcStartDate.getDateEditor().getUiComponent()).setEditable(false);
+
         // --- Course info rows ---
         Object[][] infoRows = {
-                { "Tên lớp học *", tfName },
-                { "Học viên tối đa *", tfMaxStudent },
-                { "Trạng thái *", cbStatus },
-                { "Khóa học *", cbCourse },
-                { "Mã giáo viên *", tfTeacherID },
-                { "Mã phòng học *", tfRoomID },
-                { "Ngày bắt đầu *", tfStartDate },
-                { "Ngày kết thúc *", tfEndDate },
+                {"Tên lớp học *", tfName},
+                {"Học viên tối đa *", tfMaxStudent},
+                {"Trạng thái *", cbStatus},
+                {"Khóa học *", cbCourse},
+                {"Mã giáo viên *", tfTeacherID},
+                {"Mã phòng học *", tfRoomID},
+                {"Ngày bắt đầu *", dtcStartDate},
         };
+
+        dtcStartDate.addPropertyChangeListener("date", new java.beans.PropertyChangeListener() {
+            @Override
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                if ("date".equals(evt.getPropertyName())) {
+                    updateCheckboxFromDate();
+                }
+            }
+        });
 
         int row = 0;
         for (Object[] r : infoRows) {
@@ -92,6 +112,50 @@ public class ClassDialog extends JDialog {
             p.add((Component) r[1], c);
             row++;
         }
+
+        // PHẦN CHỌN THỨ
+        // Tạo Label cho hàng mới
+        c.gridx = 0;
+        c.gridy = row;
+        c.weightx = 0;
+        p.add(new JLabel("Lịch học *"), c);
+
+        // Tạo Panel chứa các Checkbox
+        JPanel panelCheckBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        String[][] daysData = {
+                {"T2", "MONDAY"}, {"T3", "TUESDAY"}, {"T4", "WEDNESDAY"},
+                {"T5", "THURSDAY"}, {"T6", "FRIDAY"}, {"T7", "SATURDAY"}, {"CN", "SUNDAY"}
+        };
+
+        for (String[] day : daysData) {
+            JCheckBox cb = new JCheckBox(day[0]);
+            cb.setActionCommand(day[1]);
+            cb.setEnabled(false); // MẶC ĐỊNH KHÓA KHI CHƯA CÓ NGÀY
+            weekdaysCheckBoxes.add(cb);
+            panelCheckBox.add(cb);
+        }
+
+        c.gridx = 1;
+        c.weightx = 1;
+        p.add(panelCheckBox, c);
+
+        row++;
+
+        // PHẦN CHỌN CA HỌC (Periods)
+        c.gridx = 0;
+        c.gridy = row;
+        p.add(new JLabel("Ca học *"), c);
+
+        JPanel panelPeriods = new JPanel(new GridLayout(0, 3, 5, 2));
+        for (Period period : Period.values()) {
+            JRadioButton rb = new JRadioButton(period.toString());
+            rb.setActionCommand(period.name()); // Lưu tên Enum (ví dụ: PERIOD_1)
+            periodGroup.add(rb);
+            periodRadioButtons.add(rb);
+            panelPeriods.add(rb);
+        }
+        c.gridx = 1;
+        p.add(panelPeriods, c);
         return p;
     }
 
@@ -140,45 +204,35 @@ public class ClassDialog extends JDialog {
             return;
         }
 
-        LocalDate startDate;
-        LocalDate endDate;
-
-        try {
-            startDate = LocalDate.parse(tfStartDate.getText().trim(), formatter);
-        } catch (DateTimeParseException e) {
-            warn("Ngày bắt đầu không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
+        java.util.Date dateFromChooser = dtcStartDate.getDate();
+        if (dateFromChooser == null) {
+            warn("Vui lòng chọn ngày bắt đầu!");
             return;
         }
+        LocalDate startDate = changeDateToLocalDate(dateFromChooser);
 
-        if(startDate.isBefore(LocalDate.now())){
-            warn("Ngày bắt đầu phải sau thời điểm hiện tại!");
+        if (startDate.isBefore(LocalDate.now())) {
+            warn("Ngày bắt đầu phải từ hôm nay trở đi!");
             return;
         }
-
-        try {
-            endDate = LocalDate.parse(tfEndDate.getText().trim(), formatter);
-        } catch (DateTimeParseException e) {
-            warn("Ngày kết thúc không hợp lệ! (Vui lòng nhập theo định dạng (dd/MM/yyyy) và phải là ngày, tháng, năm hợp lệ!)");
-            return;
-        }
-
-        if(endDate.isBefore(LocalDate.now())){
-            warn("Ngày kết thúc phải sau thời điểm hiện tại!");
-            return;
-        }
-
-        if (endDate.isBefore(startDate)) {
-            warn("Ngày kết thúc phải sau ngày bắt đầu!");
-            return;
-        }
-
         dto.setStartDate(startDate);
-        dto.setEndDate(endDate);
+        dto.setDaysOfWeek(getSelectedDaysString(weekdaysCheckBoxes));
+
+        ButtonModel selectedModel = periodGroup.getSelection();
+        if (selectedModel == null) {
+            warn("Vui lòng chọn một ca học!");
+            return;
+        }
+
+        Period selectedPeriod = Period.valueOf(selectedModel.getActionCommand());
+
+        dto.setStartTime(selectedPeriod.getStartTime());
+        dto.setEndTime(selectedPeriod.getEndTime());
 
         new SwingWorker<Class, Void>() {
             @Override
             protected Class doInBackground() throws Exception {
-                if(existing != null) {
+                if (existing != null) {
                     dto.setClassID(existing.getClassID());
                     return service.update(dto.getClassID(), dto);
                 }
@@ -189,7 +243,7 @@ public class ClassDialog extends JDialog {
             protected void done() {
                 try {
                     get(); // kiểm tra doInBackground có lỗi không
-                    if(existing != null)
+                    if (existing != null)
                         MessageBox.info(ClassDialog.this, "Cập nhật lớp học thành công.");
                     else
                         MessageBox.info(ClassDialog.this, "Thêm lớp học thành công.");
@@ -221,9 +275,90 @@ public class ClassDialog extends JDialog {
             tfRoomID.setText(String.valueOf(c.getRoom().getRoomID()));
         if (c.getStatus() != null)
             cbStatus.setSelectedItem(c.getStatus());
-        if (c.getStartDate() != null)
-            tfStartDate.setText(c.getStartDate().format(formatter));
-        if (c.getEndDate() != null)
-            tfEndDate.setText(c.getEndDate().format(formatter));
+        if (c.getStartDate() != null) {
+            // Chuyển từ LocalDate sang Date
+            java.util.Date date = java.util.Date.from(c.getStartDate()
+                    .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+
+            // B1: Set ngày (Lúc này PropertyChangeListener sẽ chạy updateCheckboxFromDate)
+            dtcStartDate.setDate(date);
+
+            // B2: Tick lại các ngày học bổ sung từ DB (vì B1 đã xóa sạch tick)
+            if (c.getDaysOfWeek() != null) {
+                String[] savedDays = c.getDaysOfWeek().split(", ");
+                for (String day : savedDays) {
+                    for (JCheckBox cb : weekdaysCheckBoxes) {
+                        if (cb.getActionCommand().equals(day)) {
+                            cb.setSelected(true);
+                        }
+                    }
+                }
+            }
+        }
+
+
+            List<Schedule> schedules = scheduleService.searchByClassID(c.getClassID().toString());
+            if (!schedules.isEmpty()) {
+                LocalTime classStart = schedules.getFirst().getStartTime();
+                for (JRadioButton rb : periodRadioButtons) {
+                    Period p = Period.valueOf(rb.getActionCommand());
+                    if (p.getStartTime().equals(classStart)) {
+                        rb.setSelected(true);
+                        break;
+                    }
+                }
+            }
+    }
+
+    // Hàm để duyệt và nối chuỗi
+    private String getSelectedDaysString(List<JCheckBox> checkBoxes) {
+        StringJoiner joiner = new StringJoiner(", ");
+        for (JCheckBox cb : checkBoxes) {
+            if (cb.isSelected()) {
+                joiner.add(cb.getActionCommand());
+            }
+        }
+        return joiner.toString();
+    }
+
+    private LocalDate changeDateToLocalDate(Date date)  {
+        // Chuyển từ java.util.Date sang java.time.LocalDate
+        return date.toInstant()
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    private void updateCheckboxFromDate() {
+        java.util.Date selectedDate = dtcStartDate.getDate();
+        boolean hasDate = (selectedDate != null);
+
+        if (selectedDate == null) {
+            for (JCheckBox cb : weekdaysCheckBoxes) {
+                cb.setSelected(false);
+                cb.setEnabled(false);
+            }
+            return;
+        }
+
+        LocalDate localDate = changeDateToLocalDate(selectedDate);
+        String dayOfWeek = localDate.getDayOfWeek().name(); // MONDAY, TUESDAY...
+
+        for (JCheckBox cb : weekdaysCheckBoxes) {
+            // Xóa lựa chọn cũ mỗi khi đổi ngày
+            cb.setSelected(false);
+
+            // Mở khóa cho phép chọn
+            cb.setEnabled(true);
+
+            // Nếu trùng với thứ của ngày bắt đầu
+            if (cb.getActionCommand().equalsIgnoreCase(dayOfWeek)) {
+                cb.setSelected(true); // Tự động chọn thứ bắt đầu
+                cb.setEnabled(false); // Khóa lại không cho bỏ chọn
+            }
+        }
+
+        for (JRadioButton rb : periodRadioButtons) {
+            rb.setEnabled(hasDate);
+        }
     }
 }

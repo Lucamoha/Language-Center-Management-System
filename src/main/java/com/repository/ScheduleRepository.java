@@ -55,8 +55,7 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
     }
 
     public List<Schedule> findByClass(Long classId) {
-        EntityManager em = em();
-        try {
+        try (EntityManager em = em()) {
             return em.createQuery(
                     "SELECT s FROM Schedule s WHERE s.aClass.classID = :cid ORDER BY s.date, s.startTime",
                     Schedule.class)
@@ -64,8 +63,31 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
                     .getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn lịch học theo lớp: " + e.getMessage(), e);
-        } finally {
-            em.close();
+        }
+    }
+
+    public void deleteFutureSchedulesByClassId(Long id, LocalDate day) {
+        try (EntityManager em = em()) {
+             em.createQuery("DELETE FROM Schedule s " +
+                    "WHERE s.aClass.classID = :id " +
+                    "AND s.date >= :day")
+                    .setParameter("id", id)
+                    .setParameter("day", day);
+        } catch (Exception e) {
+            throw new SystemException("Lỗi xóa lịch học tương lai theo lớp: " + e.getMessage(), e);
+        }
+    }
+
+    public List<Schedule> findByRange(LocalDate start, LocalDate end) {
+        try(EntityManager em = em()) {
+            return em.createQuery(
+                    "SELECT s FROM Schedule s " +
+                    "WHERE s.date BETWEEN :start AND :end ", Schedule.class)
+                    .setParameter("start", start)
+                    .setParameter("end", end)
+                    .getResultList();
+        } catch (Exception e) {
+            throw new SystemException("Lỗi tìm lịch học theo khoảng thời gian: " + e.getMessage(), e);
         }
     }
 }

@@ -53,6 +53,9 @@ public class Class {
     @Builder.Default
     ClassStatus status = ClassStatus.ACTIVE;
 
+    @Column(name = "days_of_week")
+    String daysOfWeek; // các thứ học trong tuần (vd: MONDAY, TUESDAY)
+
     @OneToMany(mappedBy = "aclass")
     List<Enrollment> enrollments;
 }

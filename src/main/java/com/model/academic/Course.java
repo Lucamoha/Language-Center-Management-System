@@ -35,7 +35,7 @@ public class Course {
     Level level;
 
     @Column(name = "duration", nullable = false)
-    Integer duration; // hours / week
+    Integer duration; // tổng số buổi (total_session)
 
     @Column(name = "fee", nullable = false, precision = 18, scale = 2)
     @Builder.Default

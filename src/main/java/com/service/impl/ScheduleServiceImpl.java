@@ -14,6 +14,7 @@ import com.repository.ScheduleRepository;
 import com.security.PermissionChecker;
 import com.stream.ScheduleStreamQueries;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -131,5 +132,9 @@ public class ScheduleServiceImpl {
         } catch (Exception e) {
             throw new BusinessException("Mã lớp học không tồn tại.");
         }
+    }
+
+    public List<Schedule> findSchedulesByRange(LocalDate start, LocalDate end) {
+        return repo.findByRange(start, end);
     }
 }

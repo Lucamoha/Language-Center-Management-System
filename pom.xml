@@ -58,6 +58,13 @@
             <artifactId>logback-classic</artifactId>
             <version>1.5.6</version>
         </dependency>
+
+<!--        Dùng cho JDateChooser chọn date-->
+        <dependency>
+            <groupId>com.toedter</groupId>
+            <artifactId>jcalendar</artifactId>
+            <version>1.4</version>
+        </dependency>
     </dependencies>
 
     <build>
