@@ -5,8 +5,9 @@ import com.model.operation.Schedule;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.ScheduleServiceImpl;
+import com.toedter.calendar.JDateChooser;
 import com.ui.dialog.ScheduleDialog;
-import com.ui.dialog.TimetableCellRenderer;
+import com.ui.util.TimetableCellRenderer;
 import com.ui.table.ScheduleTableModel;
 import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
@@ -25,118 +26,108 @@ public class SchedulesPanel extends JPanel {
     private final ScheduleTableModel model = new ScheduleTableModel();
 
     private final JTable table = new JTable(model);
-    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã lớp học...");
-    private final JButton btnAdd = UiUtil.primaryButton("Thêm");
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
-    private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
+    private final JButton btnPrev = new JButton("< Tuần trước");
+    private final JButton btnToday = new JButton("Hôm nay");
+    private final JDateChooser dcFilter = new JDateChooser();
+    private final JButton btnNext = new JButton("Tuần sau >");
+    private final JTextField tfClassSearch = UiUtil.searchField("Tên lớp...");
 
     public SchedulesPanel() {
         setLayout(new BorderLayout(10, 10));
         setBackground(UiUtil.COLOR_BG);
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-//        JTabbedPane tabs = new JTabbedPane();
-//        tabs.addTab("Danh sách", buildListTab());
-//        tabs.addTab("Thời khóa biểu", buildTimetableTab());
-        
-        // Listener để tải dữ liệu timetable khi chuyển sang tab
-//        tabs.addChangeListener(e -> {
-//            if (tabs.getSelectedIndex() == 1) { // Timetable tab
-//                refreshData();
-//            }
-//        });
-
         add(UiUtil.sectionTitle("Quản lý Lịch học"), BorderLayout.NORTH);
-//        add(tabs, BorderLayout.CENTER);
         add(buildTimetableTab(), BorderLayout.CENTER);
 
         wireEvents();
         applyRoleVisibility();
+
         loadData(null);
     }
 
-    private JPanel buildListTab() {
-        JPanel panel = new JPanel(new BorderLayout(10,10));
-        panel.setOpaque(false);
-
-        panel.add(buildHeader(), BorderLayout.NORTH);
-        panel.add(buildTable(), BorderLayout.CENTER);
-        panel.add(buildToolbar(), BorderLayout.SOUTH);
-
-        return panel;
-    }
-
     private JPanel buildTimetableTab() {
-        JPanel panel = new JPanel(new BorderLayout(10,10));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setOpaque(false);
 
+        // Nav ở trên đầu
         panel.add(buildTimetableNav(), BorderLayout.NORTH);
+
+        // Bảng ở giữa
         panel.add(buildTable(), BorderLayout.CENTER);
+
+        // Toolbar (Nút Sửa/Refresh) ở dưới cùng
         panel.add(buildToolbar(), BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // ---- builders ----
-
-    private JPanel buildHeader() {
-        JPanel p = new JPanel(new BorderLayout(10, 0));
-        p.setOpaque(false);
-
-        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        searchBar.setOpaque(false);
-        searchBar.add(new JLabel("Tìm kiếm:"));
-        searchBar.add(tfSearch);
-        JButton btnSearch = UiUtil.primaryButton("Tìm");
-        btnSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
-        searchBar.add(btnSearch);
-        p.add(searchBar, BorderLayout.EAST);
-        return p;
-    }
+//    private JPanel buildTimetableNav() {
+//        // Panel tổng chứa 2 cụm: Điều hướng (Trái/Giữa) và Lọc (Phải)
+//        JPanel mainNav = new JPanel(new BorderLayout(10, 0));
+//        mainNav.setOpaque(false);
+//
+//        // --- Cụm 1: Điều hướng tuần (FlowLayout bên Trái) ---
+//        JPanel pnlWeekNav = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+//        pnlWeekNav.setOpaque(false);
+//
+//        dcFilter.setDateFormatString("dd/MM/yyyy");
+//        dcFilter.setPreferredSize(new Dimension(120, 25));
+//
+//        pnlWeekNav.add(btnPrev);
+//        pnlWeekNav.add(btnToday);
+//        pnlWeekNav.add(dcFilter);
+//        pnlWeekNav.add(btnNext);
+//
+//        // --- Cụm 2: Lọc theo lớp (FlowLayout bên Phải) ---
+//        JPanel pnlClassFilter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+//        pnlClassFilter.setOpaque(false);
+//        pnlClassFilter.add(new JLabel("Lọc lớp:"));
+//        tfClassSearch.setPreferredSize(new Dimension(150, 25));
+//        pnlClassFilter.add(tfClassSearch);
+//
+//        JButton btnFilter = UiUtil.primaryButton("Lọc");
+//        btnFilter.addActionListener(e -> loadData(tfClassSearch.getText().trim()));
+//        pnlClassFilter.add(btnFilter);
+//
+//        // Đưa 2 cụm vào mainNav
+//        mainNav.add(pnlWeekNav, BorderLayout.WEST);
+//        mainNav.add(pnlClassFilter, BorderLayout.EAST);
+//
+//        return mainNav;
+//    }
 
     private JPanel buildTimetableNav() {
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        JButton btnPrev = new JButton("< Tuần trước");
-        JButton btnToday = new JButton("Hôm nay");
-        JButton btnNext = new JButton("Tuần sau >");
+        JPanel mainNav = new JPanel(new BorderLayout(10, 0));
+        mainNav.setOpaque(false);
 
-        // Hàm cập nhật dữ liệu và hiển thị
-        Runnable refreshTimetable = () -> {
-            LocalDate monday = model.getMondayOfSelectedWeek();
-            LocalDate sunday = monday.plusDays(6);
+        // Cụm điều hướng
+        JPanel pnlWeekNav = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        pnlWeekNav.setOpaque(false);
+        dcFilter.setDateFormatString("dd/MM/yyyy");
+        dcFilter.setPreferredSize(new Dimension(120, 25));
+        pnlWeekNav.add(btnPrev);
+        pnlWeekNav.add(btnToday);
+        pnlWeekNav.add(dcFilter);
+        pnlWeekNav.add(btnNext);
 
-            //Gọi Service lấy lịch trong khoảng 1 tuần này
-            List<Schedule> data = service.findSchedulesByRange(monday, sunday);
-            model.setData(data);
-            // Áp dụng lại styles để đảm bảo định dạng nhất quán
-            applyTableStyles();
-        };
+        // Cụm lọc lớp
+        JPanel pnlClassFilter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        pnlClassFilter.setOpaque(false);
+        pnlClassFilter.add(new JLabel("Lọc lớp:"));
+        tfClassSearch.setPreferredSize(new Dimension(150, 25));
+        pnlClassFilter.add(tfClassSearch);
 
-        btnPrev.addActionListener(e -> {
-            model.setWeek(model.getMondayOfSelectedWeek().minusWeeks(1));
-            refreshTimetable.run();
-        });
+        JButton btnFilter = UiUtil.primaryButton("Lọc");
+        btnFilter.addActionListener(e -> loadData(tfClassSearch.getText().trim()));
+        pnlClassFilter.add(btnFilter);
 
-        btnToday.addActionListener(e -> {
-            // Lấy ngày thứ 2 của tuần chứa ngày hôm nay
-            LocalDate today = LocalDate.now();
-            model.setWeek(today);
+        mainNav.add(pnlWeekNav, BorderLayout.WEST);
+        mainNav.add(pnlClassFilter, BorderLayout.EAST);
 
-            // Cập nhật lại dữ liệu từ database cho tuần này
-            refreshData();
-        });
-
-        btnNext.addActionListener(e -> {
-            model.setWeek(model.getMondayOfSelectedWeek().plusWeeks(1));
-            refreshTimetable.run();
-        });
-
-        navPanel.add(btnPrev);
-        navPanel.add(btnToday);
-        navPanel.add(btnNext);
-
-        return navPanel;
+        return mainNav;
     }
 
     private JScrollPane buildTable() {
@@ -163,28 +154,48 @@ public class SchedulesPanel extends JPanel {
     private void applyRoleVisibility() {
         CurrentUser u = SecurityContext.get();
         boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
-        btnAdd.setVisible(canWrite);
         btnEdit.setVisible(canWrite);
-        btnDelete.setVisible(canWrite);
     }
 
     // ---- events ----
 
+//    private void wireEvents() {
+//        btnEdit.addActionListener(e -> onEdit());
+//        btnRefresh.addActionListener(e -> loadData(null));
+//    }
+
     private void wireEvents() {
-        btnAdd.addActionListener(e -> onAdd());
         btnEdit.addActionListener(e -> onEdit());
-        btnDelete.addActionListener(e -> onDelete());
-        btnRefresh.addActionListener(e -> loadData(null));
-        tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
-    }
+        btnRefresh.addActionListener(e -> loadData(tfClassSearch.getText().trim()));
 
-    private void onAdd() {
-        ScheduleDialog dlg = new ScheduleDialog(getParentFrame(), null);
-        dlg.setVisible(true);
+        // Sự kiện nút Lọc và Enter trên ô tìm kiếm
+        tfClassSearch.addActionListener(e -> loadData(tfClassSearch.getText().trim()));
 
-        if (dlg.isSuccess()) {
-            loadData(null);
-        }
+        // Điều hướng tuần
+        btnPrev.addActionListener(e -> {
+            model.setWeek(model.getMondayOfSelectedWeek().minusWeeks(1));
+            loadData(tfClassSearch.getText().trim());
+        });
+
+        btnNext.addActionListener(e -> {
+            model.setWeek(model.getMondayOfSelectedWeek().plusWeeks(1));
+            loadData(tfClassSearch.getText().trim());
+        });
+
+        btnToday.addActionListener(e -> {
+            model.setWeek(LocalDate.now());
+            dcFilter.setDate(null); // Reset bộ lọc ngày về trống
+            loadData(tfClassSearch.getText().trim());
+        });
+
+        // Sự kiện chọn ngày trên JDateChooser
+        dcFilter.addPropertyChangeListener("date", evt -> {
+            if ("date".equals(evt.getPropertyName()) && evt.getNewValue() != null) {
+                LocalDate selected = new java.sql.Date(((java.util.Date) evt.getNewValue()).getTime()).toLocalDate();
+                model.setWeek(selected);
+                loadData(tfClassSearch.getText().trim());
+            }
+        });
     }
 
     private void onEdit() {
@@ -195,96 +206,67 @@ public class SchedulesPanel extends JPanel {
             return;
         }
 
-        Schedule selected = model.getScheduleAt(row, col);
+        List<Schedule> scheduleList = model.getSchedulesAt(row, col);
 
-        if (selected == null) {
+        if (scheduleList.isEmpty()) {
             MessageBox.warn(this, "Ô bạn chọn không có lịch học.");
             return;
+        }
+
+        Schedule selected;
+        if (scheduleList.size() == 1) {
+            selected = scheduleList.get(0);
+        } else {
+            // Cho user chọn khi có nhiều lịch trong ô
+            String[] options = scheduleList.stream()
+                    .map(s -> s.getAClass().getClassName() + " - " + s.getRoom().getRoomName())
+                    .toArray(String[]::new);
+            int choice = JOptionPane.showOptionDialog(this, "Chọn lịch để sửa:",
+                    "Nhiều lịch trong ô", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (choice < 0) return;
+            selected = scheduleList.get(choice);
         }
 
         ScheduleDialog dlg = new ScheduleDialog(getParentFrame(), selected);
         dlg.setVisible(true);
 
         if (dlg.isSuccess()) {
-            refreshData();
+            loadData(tfClassSearch.getText().trim());
         }
     }
-
-    private void onDelete() {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            MessageBox.warn(this, "Vui lòng chọn một lịch học để xóa.");
-            return;
-        }
-        Schedule selected = model.getRow(row);
-
-        if (!MessageBox.confirm(this, "Bạn có chắc muốn xóa lịch học có mã: " + selected.getScheduleID() + "?"))
-            return;
-
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                service.delete(selected.getScheduleID());
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    MessageBox.info(SchedulesPanel.this, "Đã xóa lịch học.");
-                    loadData(null);
-                } catch (Exception ex) {
-                    handleException(ex);
-                }
-            }
-        }.execute();
-    }
-
-    private void refreshData() {
-        LocalDate start = model.getMondayOfSelectedWeek();
-        LocalDate end = start.plusDays(6);
-
-        List<Schedule> weeklySchedules = service.findSchedulesByRange(start, end);
-        model.setData(weeklySchedules);
-
-        SwingUtilities.invokeLater(this::applyTableStyles);
-    }
-
-//    private void reapplyStyles() {
-//        table.setDefaultRenderer(Object.class, new TimetableCellRenderer());
-//        table.getTableHeader().setPreferredSize(new Dimension(0, 45));
-//        table.setRowHeight(50);
-//        table.getColumnModel().getColumn(0).setPreferredWidth(120);
-//    }
 
     private void loadData(String keyword) {
-        btnAdd.setEnabled(false);
+        // Vô hiệu hóa nút bấm để tránh người dùng click loạn khi đang load
         btnEdit.setEnabled(false);
-        btnDelete.setEnabled(false);
+        String finalKeyword = (keyword == null) ? "" : keyword.trim();
 
-        new SwingWorker<java.util.List<Schedule>, Void>() {
+        new SwingWorker<List<Schedule>, Void>() {
             @Override
             protected List<Schedule> doInBackground() {
-                return (keyword == null || keyword.isBlank())
-                        ? service.findSchedulesByRange(model.getMondayOfSelectedWeek(), model.getMondayOfSelectedWeek().plusDays(6))
-                        : service.searchByClassID(keyword);
+                // Lấy khoảng ngày của tuần đang chọn trên UI
+                LocalDate start = model.getMondayOfSelectedWeek();
+                LocalDate end = start.plusDays(6);
+
+                // Gọi service xử lý đa điều kiện: Lịch trong tuần + Tên/Mã lớp
+                return service.findSchedulesByRangeAndClassName(start, end, finalKeyword);
             }
 
             @Override
             protected void done() {
                 try {
+                    // 2. Cập nhật dữ liệu vào Model
                     model.setData(get());
-                    // Chờ UI cập nhật structure xong rồi mới ép Style
+
+                    // 3. Ép lại Style sau khi cấu trúc bảng ổn định
                     SwingUtilities.invokeLater(() -> applyTableStyles());
+
                 } catch (Exception ex) {
                     handleException(ex);
                 } finally {
                     CurrentUser u = SecurityContext.get();
                     boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
-                    btnAdd.setEnabled(canWrite);
                     btnEdit.setEnabled(canWrite);
-                    btnDelete.setEnabled(canWrite);
                 }
             }
         }.execute();
@@ -304,23 +286,6 @@ public class SchedulesPanel extends JPanel {
         return (Frame) SwingUtilities.getWindowAncestor(this);
     }
 
-//    private void applyTableStyles() {
-//        // 1. Ép Renderer cho toàn bộ các cột hiện có trong Model
-//        TimetableCellRenderer renderer = new TimetableCellRenderer();
-//        for (int i = 0; i < table.getColumnCount(); i++) {
-//            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-//        }
-//
-//        // 2. Ép lại chiều cao dòng (vì structure changed sẽ reset về mặc định)
-//        table.setRowHeight(60);
-//
-//        // 3. Chỉnh độ rộng cột Khung giờ
-//        if (table.getColumnCount() > 0) {
-//            table.getColumnModel().getColumn(0).setPreferredWidth(100);
-//            table.getColumnModel().getColumn(0).setMaxWidth(120);
-//        }
-//    }
-
     private void applyTableStyles() {
         // Luôn set Renderer cho Header (để giữ màu tiêu đề)
         table.getTableHeader().setPreferredSize(new Dimension(0, 45));
@@ -331,14 +296,47 @@ public class SchedulesPanel extends JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(renderer);
         }
 
-        // Chiều cao dòng đồng nhất
-        table.setRowHeight(60);
-
         // Độ rộng cột khung giờ
         if (table.getColumnCount() > 0) {
             table.getColumnModel().getColumn(0).setPreferredWidth(100);
             table.getColumnModel().getColumn(0).setMinWidth(100);
             table.getColumnModel().getColumn(0).setMaxWidth(120);
+        }
+
+//        // Tính chiều cao động theo số lịch tối đa trong mỗi hàng
+//        final int BASE_HEIGHT = 60;        // chiều cao cho 1 lịch
+//        final int PER_EXTRA_SCHEDULE = 100; // cộng thêm cho mỗi lịch thứ 2 trở đi
+//
+//        for (int row = 0; row < table.getRowCount(); row++) {
+//            int maxCount = 1;
+//            for (int col = 1; col < table.getColumnCount(); col++) {
+//                int count = model.getSchedulesAt(row, col).size();
+//                if (count > maxCount) maxCount = count;
+//            }
+//            int rowHeight = BASE_HEIGHT + (maxCount - 1) * PER_EXTRA_SCHEDULE;
+//            table.setRowHeight(row, rowHeight);
+//        }
+
+        // TỰ ĐỘNG TÍNH CHIỀU CAO DÒNG
+        for (int row = 0; row < table.getRowCount(); row++) {
+            int maxPreferredHeight = 60; // Chiều cao tối thiểu
+
+            for (int col = 1; col < table.getColumnCount(); col++) {
+                Object value = table.getValueAt(row, col);
+                if (value != null && !value.toString().isEmpty()) {
+                    // Sử dụng Renderer để tính chiều cao ưu thích của ô đó
+                    Component comp = table.prepareRenderer(table.getCellRenderer(row, col), row, col);
+
+                    // Ép chiều rộng hiện tại của cột để component tính toán việc xuống dòng
+                    comp.setSize(table.getColumnModel().getColumn(col).getWidth(), 1000);
+
+                    int preferredHeight = comp.getPreferredSize().height + 10; // +10 cho padding
+                    if (preferredHeight > maxPreferredHeight) {
+                        maxPreferredHeight = preferredHeight;
+                    }
+                }
+            }
+            table.setRowHeight(row, maxPreferredHeight);
         }
     }
 }

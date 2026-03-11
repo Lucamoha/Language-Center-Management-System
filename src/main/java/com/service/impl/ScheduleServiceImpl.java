@@ -99,8 +99,8 @@ public class ScheduleServiceImpl {
                     dto.getStartTime(),
                     dto.getEndTime());
             if (!conflicts.isEmpty()) {
-                for (Schedule conflict: conflicts){
-                    if(!conflict.getScheduleID().equals(dto.getScheduleID())){
+                for (Schedule conflict : conflicts) {
+                    if (!conflict.getScheduleID().equals(dto.getScheduleID())) {
                         throw new BusinessException("Phòng học đã có lịch trùng với thời gian này.");
                     }
                 }
@@ -108,8 +108,22 @@ public class ScheduleServiceImpl {
         }
 
         Optional<Schedule> schedule = repo.findById(dto.getScheduleID());
-        if(schedule.isEmpty())
+        if (schedule.isEmpty())
             throw new BusinessException("Không tìm thấy lịch học.");
+
+        // Kiểm tra lớp không được học cùng lúc ở hai phòng khác nhau
+        if (dto.getDate() != null && dto.getStartTime() != null && dto.getEndTime() != null) {
+            List<Schedule> classSchedules = repo.findAll().stream()
+                    .filter(s -> s.getAClass().getClassID().equals(aClass.get().getClassID())
+                            && !s.getScheduleID().equals(dto.getScheduleID())
+                            && s.getDate().equals(dto.getDate())
+                            && !s.getRoom().getRoomID().equals(dto.getRoomID())
+                            && s.getStartTime().equals(dto.getStartTime()))
+                    .toList();
+            if (!classSchedules.isEmpty()) {
+                throw new BusinessException("Một lớp không thể học cùng ngày cùng giờ tại hai phòng khác nhau!");
+            }
+        }
 
         schedule.get().setRoom(room.get());
         schedule.get().setAClass(aClass.get());
@@ -134,7 +148,7 @@ public class ScheduleServiceImpl {
         }
     }
 
-    public List<Schedule> findSchedulesByRange(LocalDate start, LocalDate end) {
-        return repo.findByRange(start, end);
+    public List<Schedule> findSchedulesByRangeAndClassName(LocalDate start, LocalDate end, String classKeyword) {
+        return repo.findByRangeAndClassName(start, end, classKeyword);
     }
 }

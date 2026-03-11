@@ -1,4 +1,4 @@
-package com.ui.dialog;
+package com.ui.util;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

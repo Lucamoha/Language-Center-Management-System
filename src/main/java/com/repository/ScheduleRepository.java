@@ -3,6 +3,7 @@ package com.repository;
 import com.exception.SystemException;
 import com.model.operation.Schedule;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import java.time.LocalDate;
 
@@ -37,7 +38,7 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
      * Two intervals [a1,a2] and [b1,b2] overlap when a1 < b2 AND a2 > b1.
      */
     public List<Schedule> findOverlapping(Long roomId, LocalDate date,
-            LocalTime startTime, LocalTime endTime) {
+                                          LocalTime startTime, LocalTime endTime) {
         try (EntityManager em = em()) {
             return em.createQuery(
                             "SELECT s FROM Schedule s WHERE s.room.roomID = :rid " +
@@ -57,8 +58,8 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
     public List<Schedule> findByClass(Long classId) {
         try (EntityManager em = em()) {
             return em.createQuery(
-                    "SELECT s FROM Schedule s WHERE s.aClass.classID = :cid ORDER BY s.date, s.startTime",
-                    Schedule.class)
+                            "SELECT s FROM Schedule s WHERE s.aClass.classID = :cid ORDER BY s.date, s.startTime",
+                            Schedule.class)
                     .setParameter("cid", classId)
                     .getResultList();
         } catch (Exception e) {
@@ -67,27 +68,42 @@ public class ScheduleRepository extends BaseRepository<Schedule, Long> {
     }
 
     public void deleteFutureSchedulesByClassId(Long id, LocalDate day) {
-        try (EntityManager em = em()) {
-             em.createQuery("DELETE FROM Schedule s " +
-                    "WHERE s.aClass.classID = :id " +
-                    "AND s.date >= :day")
+        EntityManager em = em();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.createQuery("DELETE FROM Schedule s " +
+                            "WHERE s.aClass.classID = :id " +
+                            "AND s.date >= :day")
                     .setParameter("id", id)
-                    .setParameter("day", day);
+                    .setParameter("day", day)
+                    .executeUpdate();
+            tx.commit();
         } catch (Exception e) {
+            if (tx.isActive())
+                tx.rollback();
             throw new SystemException("Lỗi xóa lịch học tương lai theo lớp: " + e.getMessage(), e);
+        } finally {
+            em.close();
         }
     }
 
-    public List<Schedule> findByRange(LocalDate start, LocalDate end) {
-        try(EntityManager em = em()) {
+    public List<Schedule> findByRangeAndClassName(LocalDate start, LocalDate end, String classKeyword) {
+        try (EntityManager em = em()) {
+            String keyword = "%" + (classKeyword == null ? "" : classKeyword) + "%";
             return em.createQuery(
-                    "SELECT s FROM Schedule s " +
-                    "WHERE s.date BETWEEN :start AND :end ", Schedule.class)
+                            "SELECT s FROM Schedule s " +
+                                    "LEFT JOIN FETCH s.aClass c " +
+                                    "LEFT JOIN FETCH s.room " +
+                                    "WHERE s.date BETWEEN :start AND :end " +
+                                    "AND c.className LIKE :classKeyword " +
+                                    "ORDER BY s.date, s.startTime", Schedule.class)
                     .setParameter("start", start)
                     .setParameter("end", end)
+                    .setParameter("classKeyword", keyword)
                     .getResultList();
         } catch (Exception e) {
-            throw new SystemException("Lỗi tìm lịch học theo khoảng thời gian: " + e.getMessage(), e);
+            throw new SystemException("Lỗi tìm lịch học theo khoảng thời gian và tên lớp: " + e.getMessage(), e);
         }
     }
 }

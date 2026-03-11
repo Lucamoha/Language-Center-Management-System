@@ -296,18 +296,17 @@ public class ClassDialog extends JDialog {
             }
         }
 
-
-            List<Schedule> schedules = scheduleService.searchByClassID(c.getClassID().toString());
-            if (!schedules.isEmpty()) {
-                LocalTime classStart = schedules.getFirst().getStartTime();
-                for (JRadioButton rb : periodRadioButtons) {
-                    Period p = Period.valueOf(rb.getActionCommand());
-                    if (p.getStartTime().equals(classStart)) {
-                        rb.setSelected(true);
-                        break;
-                    }
+        List<Schedule> schedules = scheduleService.searchByClassID(c.getClassID().toString());
+        if (!schedules.isEmpty()) {
+            LocalTime classStart = schedules.getFirst().getStartTime();
+            for (JRadioButton rb : periodRadioButtons) {
+                Period p = Period.valueOf(rb.getActionCommand());
+                if (p.getStartTime().equals(classStart)) {
+                    rb.setSelected(true);
+                    break;
                 }
             }
+        }
     }
 
     // Hàm để duyệt và nối chuỗi
@@ -321,7 +320,7 @@ public class ClassDialog extends JDialog {
         return joiner.toString();
     }
 
-    private LocalDate changeDateToLocalDate(Date date)  {
+    private LocalDate changeDateToLocalDate(Date date) {
         // Chuyển từ java.util.Date sang java.time.LocalDate
         return date.toInstant()
                 .atZone(java.time.ZoneId.systemDefault())

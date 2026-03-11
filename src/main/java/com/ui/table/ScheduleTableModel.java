@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScheduleTableModel extends AbstractTableModel {
     private final Period[] periods = Period.values();
@@ -67,36 +68,59 @@ public class ScheduleTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int col) {
-        Period p = periods[row];
-        if (col == 0) return p.toString(); // Lấy format hh:mm - hh:mm từ Enum
+        if (col == 0) return periods[row].toString();
 
-        for (Schedule s : data) {
-            // 1. Kiểm tra Thứ: col 1 = Monday (1), ..., col 7 = Sunday (7)
-            if (s.getDate() != null && s.getDate().getDayOfWeek().getValue() == col) {
+        List<Schedule> list = getSchedulesAt(row, col);
+        if (list.isEmpty()) return "";
 
-                // 2. Kiểm tra giờ: Khớp chính xác startTime từ Enum
-                if (s.getStartTime() != null && s.getStartTime().equals(p.getStartTime())) {
-                    return "<html><center><b>" + s.getAClass().getClassName() + "</b><br>"
-                            + "<font color='blue'>" + s.getRoom().getRoomName() + "</font></center></html>";
-                }
+//        // Ghép tất cả lịch trong ô thành 1 chuỗi HTML
+//        StringBuilder sb = new StringBuilder("<html><center>");
+//        for (int i = 0; i < list.size(); i++) {
+//            Schedule s = list.get(i);
+//            sb.append("<b>").append(s.getAClass().getClassName()).append("</b><br>")
+//                    .append("<font color='blue'>").append(s.getRoom().getRoomName()).append("</font>");
+//            if (i < list.size() - 1) {
+//                // Đường kẻ phân cách giữa các lịch trong cùng ô
+//                sb.append("<br><font color='gray'>------------</font><br>");
+//            }
+//        }
+//        sb.append("</center></html>");
+//        return sb.toString();
+
+        // Thêm style width: 100% để ép text xuống dòng
+        StringBuilder sb = new StringBuilder("<html><body style='width: 100px; text-align: center;'>");
+        for (int i = 0; i < list.size(); i++) {
+            Schedule s = list.get(i);
+            sb.append("<b style='color: black;'>").append(s.getAClass().getClassName()).append("</b><br>")
+                    .append("<font color='blue'>").append(s.getRoom().getRoomName()).append("</font>");
+
+            if (i < list.size() - 1) {
+                sb.append("<br><hr style='border: 0.5px solid #ccc;'>");
             }
         }
-        return "";
+        sb.append("</body></html>");
+        return sb.toString();
     }
 
-    public Schedule getScheduleAt(int row, int col) {
-        if (col == 0) return null; // Cột khung giờ không có schedule
+    // Lấy tất cả Schedule khớp với ô [row, col].
+    // Một ô có thể có nhiều lịch trùng giờ, trùng ngày nhưng khác phòng.
+    public List<Schedule> getSchedulesAt(int row, int col) {
+        if (col == 0) return List.of(); // Cột khung giờ không có schedule
 
         Period p = periods[row];
-        for (Schedule s : data) {
-            // Khớp Thứ và Khớp Giờ bắt đầu
-            if (s.getDate() != null && s.getDate().getDayOfWeek().getValue() == col) {
-                if (s.getStartTime() != null && s.getStartTime().equals(p.getStartTime())) {
-                    return s;
-                }
-            }
-        }
-        return null;
+        return data.stream()
+                .filter(s -> s.getDate() != null
+                        && s.getDate().getDayOfWeek().getValue() == col
+                        && s.getStartTime() != null
+                        && s.getStartTime().equals(p.getStartTime()))
+                .collect(Collectors.toList());
+    }
+
+     //Trả về Schedule đầu tiên tại ô (dùng cho trường hợp chỉ có 1 lịch).
+     // Nếu ô có nhiều lịch, dùng getSchedulesAt() thay thế.
+    public Schedule getScheduleAt(int row, int col) {
+        List<Schedule> list = getSchedulesAt(row, col);
+        return list.isEmpty() ? null : list.get(0);
     }
 }
 
