@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CourseDTO {
     Long courseID;
+    String courseCode;
     String courseName;
     String description;
     Level level;

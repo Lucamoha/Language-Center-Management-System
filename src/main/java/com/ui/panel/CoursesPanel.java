@@ -1,6 +1,5 @@
 package com.ui.panel;
 
-import com.dto.CourseDTO;
 import com.exception.AppException;
 import com.model.academic.Course;
 import com.security.CurrentUser;
@@ -102,27 +101,10 @@ public class CoursesPanel extends JPanel {
     private void onAdd() {
         CourseDialog dlg = new CourseDialog(getParentFrame(), null);
         dlg.setVisible(true);
-        CourseDTO dto = dlg.getResult();
-        if (dto == null)
-            return;
 
-        new SwingWorker<Course, Void>() {
-            @Override
-            protected Course doInBackground() {
-                return service.save(dto);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    MessageBox.info(CoursesPanel.this, "Thêm khóa học thành công.");
-                    loadData(null);
-                } catch (Exception ex) {
-                    handleException(ex);
-                }
-            }
-        }.execute();
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
     }
 
     private void onEdit() {
@@ -135,27 +117,10 @@ public class CoursesPanel extends JPanel {
 
         CourseDialog dlg = new CourseDialog(getParentFrame(), selected);
         dlg.setVisible(true);
-        CourseDTO dto = dlg.getResult();
-        if (dto == null)
-            return;
 
-        new SwingWorker<Course, Void>() {
-            @Override
-            protected Course doInBackground() {
-                return service.update(selected.getCourseID(), dto);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    MessageBox.info(CoursesPanel.this, "Cập nhật khóa học thành công.");
-                    loadData(null);
-                } catch (Exception ex) {
-                    handleException(ex);
-                }
-            }
-        }.execute();
+        if (dlg.isSuccess()) {
+            loadData(null);
+        }
     }
 
     private void onDelete() {

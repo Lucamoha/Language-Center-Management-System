@@ -4,6 +4,8 @@ import com.dto.CourseDTO;
 import com.model.academic.Course;
 import com.model.academic.CourseStatus;
 import com.model.academic.Level;
+import com.service.impl.CourseServiceImpl;
+import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
 import lombok.Getter;
 
@@ -12,12 +14,13 @@ import java.awt.*;
 import java.math.BigDecimal;
 
 public class CourseDialog extends JDialog {
-    private final boolean isEdit;
-
     @Getter
-    private CourseDTO result;
+    private boolean isSuccess;
+    private final Course existing;
+    private final CourseServiceImpl service = new CourseServiceImpl();
 
     // Information Fields
+    private final JTextField tfCode = new JTextField(25);
     private final JTextField tfName = new JTextField(25);
     private final JTextField tfDuration = new JTextField(15);
     private final JComboBox<Level> cbLevel = new JComboBox<>(Level.values());
@@ -28,9 +31,10 @@ public class CourseDialog extends JDialog {
 
     public CourseDialog(Frame parent, Course existing) {
         super(parent, existing == null ? "Thêm khoá học" : "Sửa khóa học", true);
-        isEdit = existing != null;
 
-        if (isEdit)
+        this.existing = existing;
+
+        if (existing != null)
             prefill(existing);
 
         setLayout(new BorderLayout(10, 10));
@@ -51,6 +55,7 @@ public class CourseDialog extends JDialog {
 
         // --- Course info rows ---
         Object[][] infoRows = {
+                { "Code *", tfCode },
                 { "Tên khóa học *", tfName },
                 { "Số tiết trong tuần *", tfDuration },
                 { "Cấp độ", cbLevel },
@@ -75,7 +80,7 @@ public class CourseDialog extends JDialog {
 
     private JPanel buildButtons() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        JButton btnOk = UiUtil.primaryButton(isEdit ? "Cập nhật" : "Lưu");
+        JButton btnOk = UiUtil.primaryButton(existing != null ? "Cập nhật" : "Lưu");
         JButton btnCancel = new JButton("Hủy");
         btnOk.addActionListener(e -> onOk());
         btnCancel.addActionListener(e -> dispose());
@@ -85,6 +90,12 @@ public class CourseDialog extends JDialog {
     }
 
     private void onOk() {
+        String code = tfCode.getText().trim();
+        if (code.isEmpty()) {
+            warn("Code khóa học không được để trống.");
+            return;
+        }
+
         String name = tfName.getText().trim();
         if (name.isEmpty()) {
             warn("Tên khóa học không được để trống.");
@@ -92,6 +103,7 @@ public class CourseDialog extends JDialog {
         }
 
         CourseDTO dto = new CourseDTO();
+        dto.setCourseCode(code);
         dto.setCourseName(name);
         dto.setDescription(tfDescription.getText().trim());
         try {
@@ -109,8 +121,34 @@ public class CourseDialog extends JDialog {
         dto.setLevel((Level) cbLevel.getSelectedItem());
         dto.setStatus((CourseStatus) cbStatus.getSelectedItem());
 
-        result = dto;
-        dispose();
+        new SwingWorker<Course, Void>() {
+            @Override
+            protected Course doInBackground() {
+                if (existing != null) {
+                    dto.setCourseID(existing.getCourseID());
+                    return service.update(dto.getCourseID(), dto);
+                }
+                return service.save(dto);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get(); // kiểm tra doInBackground có lỗi không
+                    if (existing != null)
+                        MessageBox.info(CourseDialog.this, "Cập nhật khóa học thành công.");
+                    else
+                        MessageBox.info(CourseDialog.this, "Thêm khóa học thành công.");
+
+                    isSuccess = true; // Đặt flag để bên panel biết mà reload data
+                    dispose();
+
+                } catch (Exception e) {
+                    String msg = e.getCause().getMessage();
+                    MessageBox.warn(CourseDialog.this, msg);
+                }
+            }
+        }.execute();
     }
 
     private void warn(String msg) {
@@ -118,6 +156,7 @@ public class CourseDialog extends JDialog {
     }
 
     private void prefill(Course c) {
+        tfCode.setText(c.getCourseCode());
         tfName.setText(c.getCourseName());
         if (c.getDescription() != null)
             tfDescription.setText(c.getDescription());

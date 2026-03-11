@@ -9,7 +9,7 @@ import com.security.PermissionChecker;
 import com.service.BaseService;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 public class CourseServiceImpl implements BaseService<Course, Long, CourseDTO> {
     private final CourseRepository repo = new CourseRepository();
@@ -33,13 +33,26 @@ public class CourseServiceImpl implements BaseService<Course, Long, CourseDTO> {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy khóa học."));
     }
 
+    public Course findByCode(String code) {
+        PermissionChecker.requireAuthenticated();
+        return repo.findByCode(code);
+    }
+
     @Override
     public Course save(CourseDTO dto) {
         PermissionChecker.requireAdminOrAnyStaff();
+        if (dto.getCourseCode() == null || dto.getCourseCode().isBlank())
+            throw new com.exception.ValidationException("Code khóa học không được để trống.");
+
         if (dto.getCourseName() == null || dto.getCourseName().isBlank())
             throw new com.exception.ValidationException("Tên khóa học không được để trống.");
 
+        Course old = findByCode(dto.getCourseCode());
+        if(old != null)
+            throw new BusinessException("Code khóa học đã tồn tại!");
+
         Course course = Course.builder()
+                .courseCode(dto.getCourseCode().trim())
                 .courseName(dto.getCourseName().trim())
                 .description(dto.getDescription().trim())
                 .duration(dto.getDuration())
@@ -53,7 +66,22 @@ public class CourseServiceImpl implements BaseService<Course, Long, CourseDTO> {
     @Override
     public Course update(Long id, CourseDTO dto) {
         PermissionChecker.requireAdminOrAnyStaff();
-        Course old = this.findById(id);
+        if (dto.getCourseCode() == null || dto.getCourseCode().isBlank())
+            throw new com.exception.ValidationException("Code khóa học không được để trống.");
+
+        if (dto.getCourseName() == null || dto.getCourseName().isBlank())
+            throw new com.exception.ValidationException("Tên khóa học không được để trống.");
+
+        Course old = findById(id);
+        if (old == null)
+            throw new BusinessException("Không tìm thấy khóa học!");
+
+        Course existed = findByCode(dto.getCourseCode());
+        if (existed != null && !Objects.equals(existed.getCourseID(), old.getCourseID())) {
+            throw new BusinessException("Code khóa học đã tồn tại!");
+        } // code tồn tại ở course khác -> lỗi
+
+        old.setCourseCode(dto.getCourseCode().trim());
         old.setCourseName(dto.getCourseName().trim());
         old.setDescription(dto.getDescription().trim());
         old.setDuration(dto.getDuration());

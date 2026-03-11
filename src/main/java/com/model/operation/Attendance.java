@@ -1,6 +1,5 @@
 package com.model.operation;
 
-import com.model.academic.Class;
 import com.model.user.Student;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,9 +36,9 @@ public class Attendance {
     @JoinColumn(name = "schedule_id", nullable = false)
     Schedule schedule;
 
-    @ManyToOne
-    @JoinColumn(name = "class_id", nullable = false)
-    Class aClass;//
+//    @ManyToOne
+//    @JoinColumn(name = "class_id", nullable = false)
+//    Class aClass;//
 
     @CreationTimestamp
     @Column(name = "created_at")

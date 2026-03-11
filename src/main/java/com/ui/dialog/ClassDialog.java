@@ -33,10 +33,10 @@ public class ClassDialog extends JDialog {
     private final ScheduleServiceImpl scheduleService = new ScheduleServiceImpl();
 
     // Information Fields
-    private final JTextField tfName = new JTextField(25);
+    private final JComboBox<Course> cbCourse = new JComboBox<>();
+    private final JTextField tfName = new JTextField(30);
     private final JTextField tfMaxStudent = new JTextField(25);
     private final JComboBox<ClassStatus> cbStatus = new JComboBox<>(ClassStatus.values());
-    private final JComboBox<Course> cbCourse = new JComboBox<>();
     private final JTextField tfRoomID = new JTextField(30);
     private final JTextField tfTeacherID = new JTextField(30);
     private final List<JCheckBox> weekdaysCheckBoxes = new ArrayList<>();
@@ -49,6 +49,7 @@ public class ClassDialog extends JDialog {
         this.existing = existing;
 
         loadCourseData();
+        updateClassName();
 
         setLayout(new BorderLayout(10, 10));
         add(buildForm(), BorderLayout.CENTER);
@@ -83,14 +84,16 @@ public class ClassDialog extends JDialog {
 
         // --- Course info rows ---
         Object[][] infoRows = {
+                {"Khóa học *", cbCourse},
                 {"Tên lớp học *", tfName},
                 {"Học viên tối đa *", tfMaxStudent},
                 {"Trạng thái *", cbStatus},
-                {"Khóa học *", cbCourse},
                 {"Mã giáo viên *", tfTeacherID},
                 {"Mã phòng học *", tfRoomID},
                 {"Ngày bắt đầu *", dtcStartDate},
         };
+
+        cbCourse.addActionListener(e -> updateClassName());
 
         dtcStartDate.addPropertyChangeListener("date", new java.beans.PropertyChangeListener() {
             @Override
@@ -329,7 +332,6 @@ public class ClassDialog extends JDialog {
 
     private void updateCheckboxFromDate() {
         java.util.Date selectedDate = dtcStartDate.getDate();
-        boolean hasDate = (selectedDate != null);
 
         if (selectedDate == null) {
             for (JCheckBox cb : weekdaysCheckBoxes) {
@@ -357,7 +359,14 @@ public class ClassDialog extends JDialog {
         }
 
         for (JRadioButton rb : periodRadioButtons) {
-            rb.setEnabled(hasDate);
+            rb.setEnabled(true);
         }
+    }
+
+    private void updateClassName() {
+        if (existing != null) return; // không auto đổi khi đang edit
+        Course selected = (Course) cbCourse.getSelectedItem();
+        if (selected != null)
+            tfName.setText(service.generateClassName(selected));
     }
 }

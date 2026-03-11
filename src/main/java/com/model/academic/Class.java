@@ -23,7 +23,7 @@ public class Class {
     @Column(name = "class_id")
     Long classID;
 
-    @Column(name = "class_name")
+    @Column(name = "class_name", nullable = false, unique = true)
     String className;
 
     @ManyToOne

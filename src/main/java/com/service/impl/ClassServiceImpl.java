@@ -51,6 +51,10 @@ public class ClassServiceImpl {
         if (dto.getClassName() == null || dto.getClassName().isBlank())
             throw new ValidationException("Tên lớp không được để trống.");
 
+        List <Class> existing = classRepo.searchByExactName(dto.getClassName());
+        if (!existing.isEmpty())
+            throw new BusinessException("Tên lớp không được trùng!");
+
         Optional<Course> course = courseRepo.findById(dto.getCourseID());
         if (course.isEmpty())
             throw new BusinessException("Mã khóa học không tồn tại! Hãy nhập một mã khóa học khác!");
@@ -81,7 +85,7 @@ public class ClassServiceImpl {
                     dto.getEndTime()
             );
             if (!conflicts.isEmpty()) {
-                throw new BusinessException("Lỗi: Phòng " + room.get().getRoomName() + "đã bị trùng lịch học tại thời điểm vừa nhập!");
+                throw new BusinessException("Lỗi: Phòng " + room.get().getRoomName() + " có mã " + room.get().getRoomID() + " đã bị trùng lịch học tại thời điểm vừa nhập!");
             }
         }
 
@@ -119,6 +123,10 @@ public class ClassServiceImpl {
         PermissionChecker.requireAdminOrStaff(StaffRole.CONSULTANT);
         Class old = this.findById(id);
         LocalDate today = LocalDate.now();
+
+        List <Class> existing = classRepo.searchByExactName(dto.getClassName());
+        if (!existing.isEmpty() && !existing.getFirst().getClassID().equals(old.getClassID()))
+            throw new BusinessException("Tên lớp không được trùng!");
 
         Optional<Course> course = courseRepo.findById(dto.getCourseID());
         if (course.isEmpty())
@@ -230,5 +238,11 @@ public class ClassServiceImpl {
                 .map(String::toUpperCase)
                 .map(DayOfWeek::valueOf) // Chuyển String thành Enum DayOfWeek
                 .collect(Collectors.toSet()); // Gom vào Set
+    }
+
+    public String generateClassName(Course course) {
+        String prefix = course.getCourseCode();
+        Long count = classRepo.countByCourse(course.getCourseID());
+        return prefix + "-" + String.format("%02d", count + 1);
     }
 }
