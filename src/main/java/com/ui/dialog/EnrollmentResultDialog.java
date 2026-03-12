@@ -1,8 +1,8 @@
 package com.ui.dialog;
 
 import com.dto.EnrollmentDTO;
-import com.model.academic.Class;
 import com.model.academic.Enrollment;
+import com.service.impl.ClassServiceImpl;
 import com.service.impl.EnrollmentServiceImpl;
 import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
@@ -11,34 +11,31 @@ import lombok.Getter;
 import javax.swing.*;
 import java.awt.*;
 
-public class EnrollmentDialog extends JDialog {
+public class EnrollmentResultDialog extends JDialog {
+    private Enrollment existing = null;
     @Getter
     private boolean isSuccess;
     private final EnrollmentServiceImpl service = new EnrollmentServiceImpl();
+    private final ClassServiceImpl classService = new ClassServiceImpl();
 
     // Information Fields
     private final JTextField tfStudentID = new JTextField(30);
     private final JTextField tfClassID = new JTextField(30);
-    private final JTextField tfClassName = new JTextField(30);
 
-    public EnrollmentDialog(Frame parent, Class existing) {
-        super(parent,"Đăng ký lớp học", true);
+    public EnrollmentResultDialog(Frame parent, Enrollment existing) {
+        super(parent, existing == null ? "Thêm đăng ký lớp học" : "Sửa đăng ký lớp học", true);
+        this.existing = existing;
+
+        if (existing != null)
+            prefill(existing);
 
         setLayout(new BorderLayout(10, 10));
         add(buildForm(), BorderLayout.CENTER);
-        prefill(existing);
         add(buildButtons(), BorderLayout.SOUTH);
 
         pack();
         setResizable(false);
         setLocationRelativeTo(parent);
-    }
-
-    private void prefill(Class existing) {
-        tfClassID.setText(existing.getClassID().toString());
-        tfClassName.setText(existing.getClassName());
-        tfClassID.setEditable(false);
-        tfClassName.setEditable(false);
     }
 
     private JPanel buildForm() {
@@ -48,11 +45,10 @@ public class EnrollmentDialog extends JDialog {
         c.insets = new Insets(4, 5, 4, 5);
         c.fill = GridBagConstraints.HORIZONTAL;
 
-        // --- Enrollment info rows ---
+        // --- Course info rows ---
         Object[][] infoRows = {
-                { "Mã lớp học *", tfClassID },
-                { "Tên lớp học *", tfClassName },
                 { "Mã học viên *", tfStudentID },
+                { "Mã lớp học *", tfClassID },
         };
 
         int row = 0;
@@ -71,7 +67,7 @@ public class EnrollmentDialog extends JDialog {
 
     private JPanel buildButtons() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        JButton btnOk = UiUtil.primaryButton("Lưu");
+        JButton btnOk = UiUtil.primaryButton(existing != null ? "Cập nhật" : "Lưu");
         JButton btnCancel = new JButton("Hủy");
         btnOk.addActionListener(e -> onOk());
         btnCancel.addActionListener(e -> dispose());
@@ -90,11 +86,20 @@ public class EnrollmentDialog extends JDialog {
             return;
         }
 
-        dto.setClassID(Long.parseLong(tfClassID.getText()));
+        try {
+            dto.setClassID(Long.parseLong(tfClassID.getText().trim()));
+        } catch (Exception e) {
+            warn("Mã lớp học không hợp lệ!");
+            return;
+        }
 
         new SwingWorker<Enrollment, Void>() {
             @Override
-            protected Enrollment doInBackground() {
+            protected Enrollment doInBackground() throws Exception {
+                if(existing != null) {
+                    dto.setEnrollmentID(existing.getEnrollmentID());
+                    return service.update(dto.getEnrollmentID(), dto);
+                }
                 return service.save(dto);
             }
 
@@ -102,14 +107,17 @@ public class EnrollmentDialog extends JDialog {
             protected void done() {
                 try {
                     get(); // kiểm tra doInBackground có lỗi không
-                    MessageBox.info(EnrollmentDialog.this, "Đăng ký lớp học thành công.");
+                    if(existing != null)
+                        MessageBox.info(EnrollmentResultDialog.this, "Cập nhật đăng ký lớp học thành công.");
+                    else
+                        MessageBox.info(EnrollmentResultDialog.this, "Thêm đăng ký lớp học thành công.");
 
                     isSuccess = true; // Đặt flag để bên panel biết mà reload data
                     dispose();
 
                 } catch (Exception e) {
                     String msg = e.getCause().getMessage();
-                    MessageBox.warn(EnrollmentDialog.this, msg);
+                    MessageBox.warn(EnrollmentResultDialog.this, msg);
                 }
             }
         }.execute();
@@ -117,5 +125,12 @@ public class EnrollmentDialog extends JDialog {
 
     public void warn(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+    }
+
+    private void prefill(Enrollment e) {
+        if (e.getAclass() != null)
+            tfClassID.setText(String.valueOf(e.getAclass().getClassID()));
+        if (e.getStudent() != null)
+            tfStudentID.setText(String.valueOf(e.getStudent().getStudentID()));
     }
 }

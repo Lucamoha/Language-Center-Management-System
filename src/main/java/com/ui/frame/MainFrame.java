@@ -18,6 +18,7 @@ public class MainFrame extends JFrame {
     public static final String CARD_COURSES = "Courses";
     public static final String CARD_CLASSES = "Classes";
     public static final String CARD_ENROLLMENTS = "Enrollments";
+    public static final String CARD_ENROLLMENT_RESULTS = "EnrollmentResults";
     public static final String CARD_ROOMS = "Rooms";
     public static final String CARD_SCHEDULES = "Schedules";
     public static final String CARD_ATTENDANCE = "Attendance";
@@ -74,6 +75,8 @@ public class MainFrame extends JFrame {
             contentPanel.add(new ClassesPanel(), CARD_CLASSES);
         if (user.isAdmin() || user.isConsultant() || user.isAccountant() || user.isStudent())
             contentPanel.add(new EnrollmentsPanel(), CARD_ENROLLMENTS);
+        if (user.isAdmin() || user.isConsultant() || user.isAccountant() || user.isStudent())
+            contentPanel.add(new EnrollmentResultsPanel(), CARD_ENROLLMENT_RESULTS);
         if (user.isAdmin() || user.isConsultant())
             contentPanel.add(new RoomsPanel(), CARD_ROOMS);
         if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
@@ -109,6 +112,8 @@ public class MainFrame extends JFrame {
         addNavItem(nav, "Khóa học", CARD_COURSES, user.isAdmin() || user.isConsultant() || user.isTeacher());
         addNavItem(nav, "Lớp học", CARD_CLASSES, user.isAdmin() || user.isConsultant() || user.isTeacher());
         addNavItem(nav, "Đăng ký học", CARD_ENROLLMENTS,
+                user.isAdmin() || user.isConsultant() || user.isAccountant() || user.isStudent());
+        addNavItem(nav, "Kết quả đăng ký học", CARD_ENROLLMENT_RESULTS,
                 user.isAdmin() || user.isConsultant() || user.isAccountant() || user.isStudent());
         addNavItem(nav, "Phòng học", CARD_ROOMS, user.isAdmin() || user.isConsultant());
         addNavItem(nav, "Lịch học", CARD_SCHEDULES,
