@@ -9,7 +9,7 @@ import java.util.List;
 
 public class CourseTableModel extends AbstractTableModel {
     private static final String[] COLUMNS = {
-            "Tên", "Code", "Tổng số buổi", "Học phí", "Cấp độ", "Trạng thái", "Mô tả"
+            "ID", "Tên", "Tổng số buổi", "Học phí", "Cấp độ", "Trạng thái", "Mô tả"
     };
 
     private List<Course> data = new ArrayList<>();
@@ -43,8 +43,8 @@ public class CourseTableModel extends AbstractTableModel {
         Course c = data.get(row);
         DecimalFormat df = new DecimalFormat("#,##0.##");
         return switch (col) {
-            case 0 -> c.getCourseName();
-            case 1 -> c.getCourseCode() != null ? c.getCourseCode() : "";
+            case 0 -> c.getCourseID();
+            case 1 -> c.getCourseName();
             case 2 -> c.getDuration() != null ? c.getDuration().toString() : "";
             case 3 -> c.getFee() != null ? df.format(c.getFee()) : "";
             case 4 -> c.getLevel() != null ? c.getLevel() : "";

@@ -91,8 +91,7 @@ public class ScheduleTableModel extends AbstractTableModel {
         StringBuilder sb = new StringBuilder("<html><body style='width: 100px; text-align: center;'>");
         for (int i = 0; i < list.size(); i++) {
             Schedule s = list.get(i);
-            sb.append("<b style='color: black;'>").append("Môn: ").append(s.getAClass().getCourse().getCourseName()).append("</b><br>")
-                    .append("<b style='color: green;'>").append("Lớp: ").append(s.getAClass().getClassName()).append("</b><br>")
+            sb.append("<b style='color: green;'>").append("Lớp: ").append(s.getAClass().getClassName()).append("</b><br>")
                     .append("<font color='blue'>").append("Phòng: ").append(s.getRoom().getRoomName()).append("</font>");
 
             if (i < list.size() - 1) {

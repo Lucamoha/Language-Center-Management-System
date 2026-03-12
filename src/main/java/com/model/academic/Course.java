@@ -27,9 +27,6 @@ public class Course {
     @Column(name = "course_name", nullable = false)
     String courseName;
 
-    @Column(name = "course_code", nullable = false, unique = true)
-    String courseCode;
-
     @Column(name = "description")
     String description;
 

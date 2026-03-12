@@ -33,14 +33,4 @@ public class CourseRepository extends BaseRepository<Course, Long> {
             throw new SystemException("Lỗi tìm kiếm khóa học: " + e.getMessage(), e);
         }
     }
-
-    public Course findByCode(String code) {
-        EntityManager em = em();
-        List<Course> list = em.createQuery(
-                        "SELECT c FROM Course c WHERE c.courseCode = :code", Course.class)
-                .setParameter("code", code)
-                .getResultList();
-
-        return list.isEmpty() ? null : list.getFirst();
-    }
 }

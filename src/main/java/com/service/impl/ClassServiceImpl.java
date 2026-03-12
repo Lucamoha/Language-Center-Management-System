@@ -241,7 +241,7 @@ public class ClassServiceImpl {
     }
 
     public String generateClassName(Course course) {
-        String prefix = course.getCourseCode();
+        String prefix = course.getCourseName();
         Long count = classRepo.countByCourse(course.getCourseID());
         return prefix + "-" + String.format("%02d", count + 1);
     }

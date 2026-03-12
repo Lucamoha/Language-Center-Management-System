@@ -20,7 +20,6 @@ public class CourseDialog extends JDialog {
     private final CourseServiceImpl service = new CourseServiceImpl();
 
     // Information Fields
-    private final JTextField tfCode = new JTextField(25);
     private final JTextField tfName = new JTextField(25);
     private final JTextField tfDuration = new JTextField(15);
     private final JComboBox<Level> cbLevel = new JComboBox<>(Level.values());
@@ -55,7 +54,6 @@ public class CourseDialog extends JDialog {
 
         // --- Course info rows ---
         Object[][] infoRows = {
-                { "Code *", tfCode },
                 { "Tên khóa học *", tfName },
                 { "Số tiết trong tuần *", tfDuration },
                 { "Cấp độ", cbLevel },
@@ -90,12 +88,6 @@ public class CourseDialog extends JDialog {
     }
 
     private void onOk() {
-        String code = tfCode.getText().trim();
-        if (code.isEmpty()) {
-            warn("Code khóa học không được để trống.");
-            return;
-        }
-
         String name = tfName.getText().trim();
         if (name.isEmpty()) {
             warn("Tên khóa học không được để trống.");
@@ -103,7 +95,6 @@ public class CourseDialog extends JDialog {
         }
 
         CourseDTO dto = new CourseDTO();
-        dto.setCourseCode(code);
         dto.setCourseName(name);
         dto.setDescription(tfDescription.getText().trim());
         try {
@@ -156,7 +147,6 @@ public class CourseDialog extends JDialog {
     }
 
     private void prefill(Course c) {
-        tfCode.setText(c.getCourseCode());
         tfName.setText(c.getCourseName());
         if (c.getDescription() != null)
             tfDescription.setText(c.getDescription());
