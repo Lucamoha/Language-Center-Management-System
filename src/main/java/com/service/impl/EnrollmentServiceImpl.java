@@ -128,49 +128,6 @@ public class EnrollmentServiceImpl {
         paymentRepo.save(payment);
     }
 
-    public Enrollment update(Long id, EnrollmentDTO dto) {
-        CurrentUser user = PermissionChecker.requireAuthenticated();
-        Enrollment old = enrollmentRepo.findById(dto.getEnrollmentID())
-                .orElseThrow(() -> new BusinessException("Lịch sử đăng ký lớp học không tồn tại!"));
-
-        Student aStudent = studentRepo.findById(dto.getStudentID())
-                .orElseThrow(() -> new BusinessException("Mã học viên không tồn tại! Hãy nhập mã học viên khác!"));
-        if (aStudent.getStatus() != UserStatus.ACTIVE)
-            throw new InvalidStatusException("Học viên bị khóa! Nhập mã học viên khác!");
-
-        Class aClass = classRepo.findById(dto.getClassID())
-                .orElseThrow(() -> new BusinessException("Mã lớp học không tồn tại! Hãy nhập mã lớp học khác!"));
-        if (aClass.getStatus() != ClassStatus.ACTIVE)
-            throw new InvalidStatusException("Lớp học bị khóa! Nhập lớp học khác!");
-
-        if (user.isStudent()) {
-            long current = enrollmentRepo.countByClass(dto.getClassID());
-            if (aClass.getMaxStudent() > 0 && current >= aClass.getMaxStudent()) {
-                throw new BusinessException(
-                        "Lớp học đã đủ số học viên tối đa (" + aClass.getMaxStudent() + " người).");
-            }
-        } else if (!user.isAdmin() && !user.isConsultant()) {
-            throw new BusinessException("Bạn không có quyền đăng ký lớp học!");
-        }
-
-        old.setAclass(aClass);
-        old.setStudent(aStudent);
-
-        try {
-            return enrollmentRepo.update(old);
-        } catch (SystemException e) {
-            Throwable cause = e.getCause();
-            while (cause != null) {
-                if (cause.getMessage() != null && cause.getMessage().contains("Duplicate entry")) {
-                    throw new BusinessException(
-                            "Học viên đã từng đăng ký lớp học này! Hãy điều chỉnh lại các trường giá trị!");
-                }
-                cause = cause.getCause();
-            }
-            throw e;
-        }
-    }
-
     public void delete(Long id) {
         PermissionChecker.requireAdminOrAnyStaff();
         enrollmentRepo.delete(id);

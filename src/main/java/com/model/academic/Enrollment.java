@@ -39,8 +39,4 @@ public class Enrollment {
     @CreationTimestamp
     @Column(name = "enrolled_at")
     LocalDateTime enrolledAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }

@@ -17,7 +17,10 @@ public class EnrollmentRepository extends BaseRepository<Enrollment, Long> {
     public List<Enrollment> findAll() {
         try (EntityManager em = em()) {
             return em.createQuery(
-                    "SELECT e FROM Enrollment e LEFT JOIN FETCH e.student LEFT JOIN FETCH e.aclass ORDER BY e.enrolledAt DESC",
+                    "SELECT e FROM Enrollment e " +
+                            "LEFT JOIN FETCH e.student " +
+                            "LEFT JOIN FETCH e.aclass " +
+                            "ORDER BY e.enrolledAt DESC",
                     Enrollment.class).getResultList();
         } catch (Exception e) {
             throw new SystemException("Lỗi truy vấn đăng ký: " + e.getMessage(), e);
@@ -27,7 +30,9 @@ public class EnrollmentRepository extends BaseRepository<Enrollment, Long> {
     public List<Enrollment> findByStudent(Long studentId) {
         try (EntityManager em = em()) {
             return em.createQuery(
-                    "SELECT e FROM Enrollment e WHERE e.student.studentID = :sid ORDER BY e.enrolledAt DESC",
+                    "SELECT e FROM Enrollment e " +
+                            "WHERE e.student.studentID = :sid " +
+                            "ORDER BY e.enrolledAt DESC",
                     Enrollment.class)
                     .setParameter("sid", studentId)
                     .getResultList();

@@ -24,7 +24,7 @@ public class EnrollmentsPanel extends JPanel {
     private final ClassServiceImpl service = new ClassServiceImpl();
     private final ClassTableModel model = new ClassTableModel();
     private final JTable table = new JTable(model);
-    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã học viên...");
+    private final JTextField tfSearch = UiUtil.searchField("Tìm theo tên lớp...");
     private final JButton btnAdd = UiUtil.primaryButton("Đăng ký");
     private final JButton btnRefresh = new JButton("Làm mới");
 

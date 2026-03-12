@@ -1,12 +1,10 @@
 package com.ui.panel;
 
 import com.exception.AppException;
-import com.model.academic.Class;
-import com.model.academic.ClassStatus;
+import com.model.academic.Enrollment;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
-import com.service.impl.ClassServiceImpl;
-import com.ui.table.ClassTableModel;
+import com.service.impl.EnrollmentServiceImpl;
 import com.ui.table.EnrollmentTableModel;
 import com.ui.util.MessageBox;
 import com.ui.util.UiUtil;
@@ -21,15 +19,10 @@ public class EnrollmentResultsPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(EnrollmentResultsPanel.class);
 
-    //private final EnrollmentServiceImpl service = new EnrollmentServiceImpl();
-    private final ClassServiceImpl service = new ClassServiceImpl();
-    private final EnrollmentTableModel enrollmentTableModel = new EnrollmentTableModel();
-    private final ClassTableModel classTableModel = new ClassTableModel();
-    private final JTable enrollmentTable = new JTable(enrollmentTableModel);
-    private final JTable classTable = new JTable(classTableModel);
-    private final JTextField tfSearch = UiUtil.searchField("Tìm theo mã học viên...");
-    private final JButton btnAdd = UiUtil.primaryButton("Dăng ký");
-    private final JButton btnEdit = UiUtil.primaryButton("Sửa");
+    private final EnrollmentServiceImpl service = new EnrollmentServiceImpl();
+    private final EnrollmentTableModel model = new EnrollmentTableModel();
+    private final JTable table = new JTable(model);
+    private final JTextField tfStudentSearch = UiUtil.searchField("Tìm theo mã học viên...");
     private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
 
@@ -41,7 +34,6 @@ public class EnrollmentResultsPanel extends JPanel {
         add(buildHeader(), BorderLayout.NORTH);
         add(buildTable(), BorderLayout.CENTER);
         add(buildToolbar(), BorderLayout.SOUTH);
-
 
         wireEvents();
         applyRoleVisibility();
@@ -56,19 +48,19 @@ public class EnrollmentResultsPanel extends JPanel {
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
-        searchBar.add(new JLabel("Tìm kiếm:"));
-        searchBar.add(tfSearch);
+        searchBar.add(new JLabel("Tìm kiếm theo mã học viên:"));
+        searchBar.add(tfStudentSearch);
         JButton btnSearch = UiUtil.primaryButton("Tìm");
-        btnSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        btnSearch.addActionListener(e -> loadData(tfStudentSearch.getText().trim()));
         searchBar.add(btnSearch);
         p.add(searchBar, BorderLayout.EAST);
         return p;
     }
 
     private JScrollPane buildTable() {
-        UiUtil.styleTable(classTable);
-        classTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane sp = new JScrollPane(classTable);
+        UiUtil.styleTable(table);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane sp = new JScrollPane(table);
         sp.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         return sp;
     }
@@ -76,8 +68,6 @@ public class EnrollmentResultsPanel extends JPanel {
     private JPanel buildToolbar() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         p.setOpaque(false);
-        p.add(btnAdd);
-        p.add(btnEdit);
         p.add(btnDelete);
         p.add(btnRefresh);
         return p;
@@ -87,108 +77,67 @@ public class EnrollmentResultsPanel extends JPanel {
     private void applyRoleVisibility() {
         CurrentUser u = SecurityContext.get();
         boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
-        btnAdd.setVisible(canWrite);
-        btnEdit.setVisible(canWrite);
         btnDelete.setVisible(canWrite);
     }
 
     // ---- events ----
     private void wireEvents() {
-        btnAdd.addActionListener(e -> onAdd());
-        //btnEdit.addActionListener(e -> onEdit());
-        //btnDelete.addActionListener(e -> onDelete());
+        btnDelete.addActionListener(e -> onDelete());
         btnRefresh.addActionListener(e -> loadData(null));
-        tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
+        tfStudentSearch.addActionListener(e -> loadData(tfStudentSearch.getText().trim()));
     }
 
-    private void onAdd() {
-        int row = classTable.getSelectedRow();
+    private void onDelete() {
+        int row = table.getSelectedRow();
         if (row < 0) {
-            MessageBox.warn(this, "Vui lòng chọn một lớp để đăng ký.");
+            MessageBox.warn(this, "Vui lòng chọn một lịch sử đăng ký để xóa.");
             return;
         }
+        Enrollment selected = model.getRow(row);
 
-//        EnrollmentDialog dlg = new EnrollmentDialog(getParentFrame(), null);
-//        dlg.setVisible(true);
-//
-//        if (dlg.isSuccess()) {
-//            loadData(null);
-//        }
-    }
+        if (!MessageBox.confirm(this, "Bạn có chắc muốn xóa lịch sử đăng ký có mã đăng ký: " + selected.getEnrollmentID() + "?"))
+            return;
 
-//    private void onEdit() {
-//        int row = classTable.getSelectedRow();
-//        if (row < 0) {
-//            MessageBox.warn(this, "Vui lòng chọn một lớp đăng ký để sửa.");
-//            return;
-//        }
-//        Class selected = classTable.getRow(row);
-//
-//        EnrollmentDialog dlg = new EnrollmentDialog(getParentFrame(), selected);
-//        dlg.setVisible(true);
-//
-//        if (dlg.isSuccess()) {
-//            loadData(null);
-//        }
-//    }
-
-//    private void onDelete() {
-//        int row = classTable.getSelectedRow();
-//        if (row < 0) {
-//            MessageBox.warn(this, "Vui lòng chọn một lịch sử đăng ký để xóa.");
-//            return;
-//        }
-//        Enrollment selected = classTable.getRow(row);
-//
-//        if (!MessageBox.confirm(this, "Bạn có chắc muốn xóa lịch sử đăng ký: " + selected.getEnrollmentID() + "?"))
-//            return;
-//
-//        new SwingWorker<Void, Void>() {
-//            @Override
-//            protected Void doInBackground() {
-//                service.delete(selected.getEnrollmentID());
-//                return null;
-//            }
-//
-//            @Override
-//            protected void done() {
-//                try {
-//                    get();
-//                    MessageBox.info(EnrollmentsPanel.this, "Đã xóa lịch sử đăng ký lớp vừa chọn.");
-//                    loadData(null);
-//                } catch (Exception ex) {
-//                    handleException(ex);
-//                }
-//            }
-//        }.execute();
-//    }
-
-    private void loadData(String keyword) {
-        btnAdd.setEnabled(false);
-        btnEdit.setEnabled(false);
-        btnDelete.setEnabled(false);
-
-        new SwingWorker<java.util.List<com.model.academic.Class>, Void>() {
+        new SwingWorker<Void, Void>() {
             @Override
-            protected List<Class> doInBackground() {
-//                    return (keyword == null || keyword.isBlank())
-//                            ? service.findAll()
-//                            : service.findByStudent(Long.parseLong(keyword));
-                return service.findAll().stream().
-                        filter(c -> c.getStatus() == ClassStatus.ACTIVE).toList();
+            protected Void doInBackground() {
+                service.delete(selected.getEnrollmentID());
+                return null;
             }
 
             @Override
             protected void done() {
                 try {
-                    classTableModel.setData(get());
+                    get();
+                    MessageBox.info(EnrollmentResultsPanel.this, "Đã xóa lịch sử đăng ký lớp vừa chọn.");
+                    loadData(null);
+                } catch (Exception ex) {
+                    handleException(ex);
+                }
+            }
+        }.execute();
+    }
+
+    private void loadData(String keyword) {
+        btnDelete.setEnabled(false);
+
+        new SwingWorker<List<Enrollment>, Void>() {
+            @Override
+            protected List<Enrollment> doInBackground() {
+                return (keyword == null || keyword.isBlank())
+                            ? service.findAll()
+                            : service.findByStudent(Long.parseLong(keyword));
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    model.setData(get());
                 } catch (Exception ex) {
                     handleException(ex);
                 } finally {
                     CurrentUser u = SecurityContext.get();
                     boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
-                    btnAdd.setEnabled(canWrite);
-                    btnEdit.setEnabled(canWrite);
                     btnDelete.setEnabled(canWrite);
                 }
             }
@@ -203,10 +152,6 @@ public class EnrollmentResultsPanel extends JPanel {
             log.error("Error in EnrollmentPanel", cause);
             MessageBox.error(this, "Lỗi hệ thống: " + cause.getMessage());
         }
-    }
-
-    private Frame getParentFrame() {
-        return (Frame) SwingUtilities.getWindowAncestor(this);
     }
 }
 
