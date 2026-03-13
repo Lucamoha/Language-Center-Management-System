@@ -56,7 +56,7 @@ public class Class {
     @Column(name = "days_of_week")
     String daysOfWeek; // các thứ học trong tuần (vd: MONDAY, TUESDAY)
 
-    @OneToMany(mappedBy = "aclass")
+    @OneToMany(mappedBy = "aclass", fetch = FetchType.EAGER)
     List<Enrollment> enrollments;
 
     @Override

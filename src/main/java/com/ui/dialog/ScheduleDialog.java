@@ -42,7 +42,7 @@ public class ScheduleDialog extends JDialog {
         add(buildForm(), BorderLayout.CENTER);
         add(buildButtons(), BorderLayout.SOUTH);
 
-        if(existing != null)
+        if (existing != null)
             prefill(existing);
 
         pack();
@@ -162,8 +162,8 @@ public class ScheduleDialog extends JDialog {
         new SwingWorker<Schedule, Void>() {
             @Override
             protected Schedule doInBackground() {
-                    dto.setScheduleID(existing.getScheduleID());
-                    return service.update(dto);
+                dto.setScheduleID(existing.getScheduleID());
+                return service.update(dto);
             }
 
             @Override

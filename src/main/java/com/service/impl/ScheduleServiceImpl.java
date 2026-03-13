@@ -14,7 +14,6 @@ import com.repository.ScheduleRepository;
 import com.security.PermissionChecker;
 import com.stream.ScheduleStreamQueries;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,17 +21,10 @@ public class ScheduleServiceImpl {
     private final ScheduleRepository repo = new ScheduleRepository();
     private final ClassRepository classRepo = new ClassRepository();
     private final RoomRepository roomRepo = new RoomRepository();
+
     private final ScheduleStreamQueries scheduleStreamQueries = new ScheduleStreamQueries();
 
     public List<Schedule> findAll() {
-        var u = PermissionChecker.requireAuthenticated();
-        if (u.isTeacher()) {
-            // return schedules for classes this teacher teaches
-            return scheduleStreamQueries.filterSchedulesByTeacherID(repo.findAll(), u.relatedId());
-        } else if (u.isStudent()) {
-            // schedules shown to student (based on student attend class)
-            return scheduleStreamQueries.filterSchedulesByStudentID(repo.findAll(), u.relatedId());
-        }
         return repo.findAll();
     }
 
@@ -54,11 +46,10 @@ public class ScheduleServiceImpl {
         // Overlap validation
         if (dto.getDate() != null
                 && dto.getStartTime() != null && dto.getEndTime() != null) {
-            List<Schedule> conflicts = repo.findOverlapping(
+            List<Schedule> conflicts = scheduleStreamQueries.findOverlappingSchedules(
                     dto.getRoomID(),
                     dto.getDate(),
-                    dto.getStartTime(),
-                    dto.getEndTime());
+                    dto.getStartTime());
             if (!conflicts.isEmpty()) {
                 throw new BusinessException("Phòng học đã có lịch trùng với thời gian này.");
             }
@@ -90,39 +81,32 @@ public class ScheduleServiceImpl {
         else if (room.get().getStatus() != RoomStatus.ACTIVE)
             throw new BusinessException("Phòng học chưa sẵn sàng! Hãy nhập một mã phòng học khác!");
 
-        // Overlap validation
-        if (dto.getDate() != null
-                && dto.getStartTime() != null && dto.getEndTime() != null) {
-            List<Schedule> conflicts = repo.findOverlapping(
-                    dto.getRoomID(),
-                    dto.getDate(),
-                    dto.getStartTime(),
-                    dto.getEndTime());
-            if (!conflicts.isEmpty()) {
-                for (Schedule conflict : conflicts) {
-                    if (!conflict.getScheduleID().equals(dto.getScheduleID())) {
-                        throw new BusinessException("Phòng học đã có lịch trùng với thời gian này.");
-                    }
-                }
-            }
-        }
-
         Optional<Schedule> schedule = repo.findById(dto.getScheduleID());
         if (schedule.isEmpty())
             throw new BusinessException("Không tìm thấy lịch học.");
 
         // Kiểm tra lớp không được học cùng lúc ở hai phòng khác nhau
-        if (dto.getDate() != null && dto.getStartTime() != null && dto.getEndTime() != null) {
-            List<Schedule> classSchedules = repo.findAll().stream()
-                    .filter(s -> s.getAClass().getClassID().equals(aClass.get().getClassID())
-                            && !s.getScheduleID().equals(dto.getScheduleID())
-                            && s.getDate().equals(dto.getDate())
-                            && !s.getRoom().getRoomID().equals(dto.getRoomID())
-                            && s.getStartTime().equals(dto.getStartTime()))
-                    .toList();
-            if (!classSchedules.isEmpty()) {
+        if (dto.getDate() != null && dto.getStartTime() != null) {
+            if (!scheduleStreamQueries
+                    .findConflictSchedules(repo.findAll(),
+                            aClass.get().getClassID(),
+                            dto.getScheduleID(),
+                            dto.getRoomID(),
+                            dto.getDate(),
+                            dto.getStartTime()
+                    ).isEmpty()) {
                 throw new BusinessException("Một lớp không thể học cùng ngày cùng giờ tại hai phòng khác nhau!");
             }
+        }
+
+        // Kiểm tra 2 lớp không được học cùng lúc ở 1 phòng
+        List<Schedule> roomConflicts = scheduleStreamQueries.findOverlappingSchedules(
+                dto.getRoomID(),
+                dto.getDate(),
+                dto.getStartTime()
+        );
+        if (!roomConflicts.isEmpty()) {
+            throw new BusinessException("Lỗi: Phòng " + room.get().getRoomName() + " có mã " + room.get().getRoomID() + " đã bị trùng lịch học tại thời điểm vừa nhập!");
         }
 
         schedule.get().setRoom(room.get());
@@ -146,9 +130,5 @@ public class ScheduleServiceImpl {
         } catch (Exception e) {
             throw new BusinessException("Mã lớp học không tồn tại.");
         }
-    }
-
-    public List<Schedule> findSchedulesByRangeAndClassName(LocalDate start, LocalDate end, String classKeyword) {
-        return repo.findByRangeAndClassName(start, end, classKeyword);
     }
 }

@@ -1,11 +1,11 @@
 package com.ui.panel;
 
 import com.exception.AppException;
-import com.model.academic.EnrollmentStatus;
 import com.model.operation.Schedule;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.ScheduleServiceImpl;
+import com.stream.ScheduleStreamQueries;
 import com.toedter.calendar.JDateChooser;
 import com.ui.dialog.ScheduleDialog;
 import com.ui.util.TimetableCellRenderer;
@@ -35,6 +35,8 @@ public class SchedulesPanel extends JPanel {
     private final JButton btnNext = new JButton("Tuần sau >");
     private final JTextField tfClassSearch = UiUtil.searchField("Tên lớp...");
 
+    private final ScheduleStreamQueries scheduleStreamQueries = new ScheduleStreamQueries();
+
     public SchedulesPanel() {
         setLayout(new BorderLayout(10, 10));
         setBackground(UiUtil.COLOR_BG);
@@ -53,13 +55,8 @@ public class SchedulesPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setOpaque(false);
 
-        // Nav ở trên đầu
         panel.add(buildTimetableNav(), BorderLayout.NORTH);
-
-        // Bảng ở giữa
         panel.add(buildTable(), BorderLayout.CENTER);
-
-        // Toolbar (Nút Sửa/Refresh) ở dưới cùng
         panel.add(buildToolbar(), BorderLayout.SOUTH);
 
         return panel;
@@ -116,7 +113,6 @@ public class SchedulesPanel extends JPanel {
     }
 
     // ---- role visibility ----
-
     private void applyRoleVisibility() {
         CurrentUser u = SecurityContext.get();
         boolean canWrite = u != null && (u.isAdmin() || u.isConsultant());
@@ -208,14 +204,14 @@ public class SchedulesPanel extends JPanel {
                 // Lấy khoảng ngày của tuần đang chọn trên UI
                 LocalDate start = model.getMondayOfSelectedWeek();
                 LocalDate end = start.plusDays(6);
+                List<Schedule> schedulesByRangeAndClassName = scheduleStreamQueries.filterSchedulesByRangeAndClassName(service.findAll(), start, end, finalKeyword);
 
                 if(u.isStudent())
-                    return service.findSchedulesByRangeAndClassName(start, end, finalKeyword)
-                        .stream().filter(s -> s.getAClass()
-                                .getEnrollments().stream().
-                                anyMatch(e -> e.getStudent().getStudentID().equals(u.relatedId())
-                                        && e.getStatus() == EnrollmentStatus.ACCEPT)).toList();
-                else return service.findSchedulesByRangeAndClassName(start, end, finalKeyword);
+                    return scheduleStreamQueries
+                            .filterSchedulesByStudentID(schedulesByRangeAndClassName, u.relatedId());
+                else if (u.isTeacher())
+                    return scheduleStreamQueries.filterSchedulesByTeacherID(schedulesByRangeAndClassName, u.relatedId());
+                else return schedulesByRangeAndClassName;
             }
 
             @Override
@@ -256,7 +252,7 @@ public class SchedulesPanel extends JPanel {
         // Luôn set Renderer cho Header (để giữ màu tiêu đề)
         table.getTableHeader().setPreferredSize(new Dimension(0, 45));
 
-        // Ép Renderer cho từng cột (quan trọng nhất để giữ màu xanh)
+        // Ép Renderer cho từng cột
         TimetableCellRenderer renderer = new TimetableCellRenderer();
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(renderer);

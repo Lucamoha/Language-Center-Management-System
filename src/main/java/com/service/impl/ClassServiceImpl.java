@@ -14,6 +14,7 @@ import com.model.user.UserStatus;
 import com.repository.*;
 import com.security.PermissionChecker;
 import com.stream.ClassStreamQueries;
+import com.stream.ScheduleStreamQueries;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ public class ClassServiceImpl {
     private final RoomRepository roomRepo = new RoomRepository();
     private final ScheduleRepository scheduleRepo = new ScheduleRepository();
     private final ClassStreamQueries classStreamQueries = new ClassStreamQueries();
+    private final ScheduleStreamQueries scheduleStreamQueries = new ScheduleStreamQueries();
 
     public List<Class> findAll() {
         PermissionChecker.requireAuthenticated();
@@ -83,13 +85,12 @@ public class ClassServiceImpl {
 
         // KIỂM TRA TRÙNG LẶP cho toàn bộ chuỗi ngày học
         for (LocalDate date : studyDays) {
-            List<Schedule> conflicts = scheduleRepo.findOverlapping(
+            List<Schedule> roomConflicts = scheduleStreamQueries.findOverlappingSchedules(
                     dto.getRoomID(),
                     date,
-                    dto.getStartTime(),
-                    dto.getEndTime()
+                    dto.getStartTime()
             );
-            if (!conflicts.isEmpty()) {
+            if (!roomConflicts.isEmpty()) {
                 throw new BusinessException("Lỗi: Phòng " + room.get().getRoomName() + " có mã " + room.get().getRoomID() + " đã bị trùng lịch học tại thời điểm vừa nhập!");
             }
         }
@@ -173,10 +174,19 @@ public class ClassServiceImpl {
 
         // 3. Kiểm tra trùng lặp cho các buổi học mới
         for (LocalDate date : futureStudyDays) {
-            List<Schedule> conflicts = scheduleRepo.findOverlapping(dto.getRoomID(), date, dto.getStartTime(), dto.getEndTime());
-            boolean hasRealConflict = conflicts.stream().anyMatch(s -> !s.getAClass().getClassID().equals(id));
-            if (hasRealConflict) {
-                throw new BusinessException("Trùng lịch tại ngày: " + date);
+            List<Schedule> classConflicts = scheduleStreamQueries.findClassConflict(scheduleRepo.findAll(), id, date, dto.getStartTime());
+            boolean hasClassConflict = classConflicts.stream()
+                    .anyMatch(s -> !s.getRoom().getRoomID().equals(dto.getRoomID()));
+            if (hasClassConflict) {
+                throw new BusinessException("Lớp học này đã có lịch tại một phòng khác vào ngày: " + date);
+            }
+
+            List<Schedule> roomConflicts = scheduleStreamQueries.findOverlappingSchedules(dto.getRoomID(), date, dto.getStartTime());
+            boolean hasRoomConflict = roomConflicts.stream()
+                    .anyMatch(s -> !s.getAClass().getClassID().equals(id));
+
+            if (hasRoomConflict) {
+                throw new BusinessException("Phòng học đã bị lớp khác chiếm vào ngày " + date);
             }
         }
 
