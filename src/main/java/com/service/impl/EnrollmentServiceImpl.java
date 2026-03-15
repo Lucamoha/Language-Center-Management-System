@@ -7,6 +7,7 @@ import com.exception.SystemException;
 import com.model.academic.Class;
 import com.model.academic.ClassStatus;
 import com.model.academic.Enrollment;
+import com.model.academic.EnrollmentStatus;
 import com.model.financial.Invoice;
 import com.model.financial.InvoiceStatus;
 import com.model.financial.Payment;
@@ -105,7 +106,9 @@ public class EnrollmentServiceImpl {
         return saved;
     }
 
-    /** Tạo Invoice PENDING và Payment PENDING tương ứng */
+    /**
+     * Tạo Invoice PENDING và Payment PENDING tương ứng
+     */
     private void autoCreateInvoiceAndPayment(Student student, Class aClass) {
         java.math.BigDecimal fee = (aClass.getCourse() != null && aClass.getCourse().getFee() != null)
                 ? aClass.getCourse().getFee()
@@ -129,6 +132,13 @@ public class EnrollmentServiceImpl {
 
     public void delete(Long id) {
         PermissionChecker.requireAdminOrAnyStaff();
+        Enrollment enrollment = enrollmentRepo.findById(id)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy kết quả đăng ký!"));
+
+        if (enrollment.getStatus() == EnrollmentStatus.ACCEPT) {
+            throw new BusinessException("Lỗi: Chỉ có thể xóa kết quả đăng ký chưa thanh toán học phí!");
+        }
+
         enrollmentRepo.delete(id);
     }
 }

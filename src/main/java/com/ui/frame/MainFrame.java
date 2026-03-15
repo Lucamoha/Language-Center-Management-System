@@ -22,7 +22,8 @@ public class MainFrame extends JFrame {
     public static final String CARD_ROOMS = "Rooms";
     public static final String CARD_SCHEDULES = "Schedules";
     public static final String CARD_ATTENDANCE = "Attendance";
-    public static final String CARD_RESULTS = "Results";
+    public static final String CARD_RESULTS_MANAGER = "Results";
+    public static final String CARD_STUDENT_PERFORMANCE = "StudentPerformance";
     public static final String CARD_INVOICES = "Invoices";
     public static final String CARD_STAFF = "Staff";
     public static final String CARD_USERACCOUNT = "UserAccounts";
@@ -84,7 +85,9 @@ public class MainFrame extends JFrame {
         if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
             contentPanel.add(new AttendancePanel(), CARD_ATTENDANCE);
         if (user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent())
-            contentPanel.add(new ResultsPanel(), CARD_RESULTS);
+            contentPanel.add(new ResultsPanel(), CARD_RESULTS_MANAGER);
+        if (user.isStudent())
+            contentPanel.add(new StudentPerformancePanel(), CARD_STUDENT_PERFORMANCE);
         if (user.isAdmin() || user.isAccountant() || user.isStudent())
             contentPanel.add(new InvoicesPanel(), CARD_INVOICES);
         if (user.isAdmin())
@@ -120,8 +123,9 @@ public class MainFrame extends JFrame {
                 user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent());
         addNavItem(nav, "Điểm danh", CARD_ATTENDANCE,
                 user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent());
-        addNavItem(nav, "Kết quả học tập", CARD_RESULTS,
+        addNavItem(nav, "Kết quả học tập", CARD_RESULTS_MANAGER,
                 user.isAdmin() || user.isConsultant() || user.isTeacher() || user.isStudent());
+        addNavItem(nav, "Hiệu suất học tập", CARD_STUDENT_PERFORMANCE, user.isStudent());
         addNavItem(nav, "Hóa đơn", CARD_INVOICES, user.isAdmin() || user.isAccountant() || user.isStudent());
         addNavItem(nav, "Nhân viên", CARD_STAFF, user.isAdmin());
         addNavItem(nav, "Tài khoản", CARD_USERACCOUNT, user.isAdmin());

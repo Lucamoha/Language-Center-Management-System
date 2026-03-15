@@ -95,7 +95,7 @@ public abstract class BaseRepository<T, ID> {
                         cause instanceof SQLIntegrityConstraintViolationException) {
 
                     throw new DataInUseException(
-                            "Không thể xóa: Dữ liệu đang được sử dụng ở bảng khác (vi phạm khóa ngoại)!"
+                            "Không thể xóa do dữ liệu đang được sử dụng ở bảng khác!"
                     );
                 }
                 cause = cause.getCause();
