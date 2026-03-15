@@ -20,6 +20,8 @@ public class EnrollmentDialog extends JDialog {
     private final JTextField tfStudentID = new JTextField(30);
     private final JTextField tfClassID = new JTextField(30);
     private final JTextField tfClassName = new JTextField(30);
+    private final JTextField tfMaxStudent = new JTextField(30);
+    private final JTextField tfEnrolledStudents = new JTextField(30);
 
     public EnrollmentDialog(Frame parent, Class existing) {
         super(parent,"Đăng ký lớp học", true);
@@ -34,13 +36,6 @@ public class EnrollmentDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    private void prefill(Class existing) {
-        tfClassID.setText(existing.getClassID().toString());
-        tfClassName.setText(existing.getClassName());
-        tfClassID.setEditable(false);
-        tfClassName.setEditable(false);
-    }
-
     private JPanel buildForm() {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
@@ -52,6 +47,8 @@ public class EnrollmentDialog extends JDialog {
         Object[][] infoRows = {
                 { "Mã lớp học *", tfClassID },
                 { "Tên lớp học *", tfClassName },
+                { "Số học viên tối đa", tfMaxStudent },
+                { "Số học viên hiện tại *", tfEnrolledStudents },
                 { "Mã học viên *", tfStudentID },
         };
 
@@ -113,6 +110,18 @@ public class EnrollmentDialog extends JDialog {
                 }
             }
         }.execute();
+    }
+
+    private void prefill(Class existing) {
+        tfClassID.setText(existing.getClassID().toString());
+        tfClassName.setText(existing.getClassName());
+        tfMaxStudent.setText(existing.getMaxStudent().toString());
+        tfEnrolledStudents.setText(String.valueOf(existing.getEnrollments().size()));
+
+        tfClassID.setEditable(false);
+        tfClassName.setEditable(false);
+        tfMaxStudent.setEditable(false);
+        tfEnrolledStudents.setEditable(false);
     }
 
     public void warn(String msg) {

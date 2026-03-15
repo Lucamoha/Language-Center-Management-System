@@ -86,7 +86,9 @@ public class EnrollmentsPanel extends JPanel {
 
     // ---- events ----
     private void wireEvents() {
-        btnAdd.addActionListener(e -> onAdd());
+        btnAdd.addActionListener(e -> {
+            onAdd();
+        });
         btnRefresh.addActionListener(e -> loadData(null));
         tfSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
     }
@@ -101,6 +103,9 @@ public class EnrollmentsPanel extends JPanel {
         Class selected = model.getRow(row);
         EnrollmentDialog dlg = new EnrollmentDialog(getParentFrame(), selected);
         dlg.setVisible(true);
+
+        if(dlg.isSuccess())
+            loadData(null);
     }
 
 

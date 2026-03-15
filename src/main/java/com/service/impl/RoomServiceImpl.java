@@ -7,12 +7,14 @@ import com.model.operation.Room;
 import com.model.user.StaffRole;
 import com.repository.RoomRepository;
 import com.security.PermissionChecker;
+import com.stream.RoomStreamQueries;
 
 import java.util.List;
 import java.util.Optional;
 
 public class RoomServiceImpl {
     private final RoomRepository repo = new RoomRepository();
+    private final RoomStreamQueries roomStreamQueries = new RoomStreamQueries();
 
     public List<Room> findAll() {
         PermissionChecker.requireAuthenticated();
@@ -52,6 +54,6 @@ public class RoomServiceImpl {
 
     public List<Room> search(String keyword){
         PermissionChecker.requireAuthenticated();
-        return keyword == null || keyword.isBlank() ? repo.findAll(): repo.searchByName(keyword);
+        return keyword == null || keyword.isBlank() ? repo.findAll(): roomStreamQueries.searchByName(keyword);
     }
 }

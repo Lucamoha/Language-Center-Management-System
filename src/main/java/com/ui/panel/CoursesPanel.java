@@ -5,6 +5,7 @@ import com.model.academic.Course;
 import com.security.CurrentUser;
 import com.security.SecurityContext;
 import com.service.impl.CourseServiceImpl;
+import com.stream.CourseStreamQueries;
 import com.ui.dialog.CourseDialog;
 import com.ui.table.CourseTableModel;
 import com.ui.util.MessageBox;
@@ -23,10 +24,14 @@ public class CoursesPanel extends JPanel {
     private final CourseTableModel model = new CourseTableModel();
     private final JTable table = new JTable(model);
     private final JTextField tfSearch = UiUtil.searchField("Tìm theo tên...");
+    private final JTextField tfMinPrice = new JTextField(8);
+    private final JTextField tfMaxPrice = new JTextField(8);
     private final JButton btnAdd = UiUtil.primaryButton("Thêm");
     private final JButton btnEdit = UiUtil.primaryButton("Sửa");
     private final JButton btnDelete = UiUtil.dangerButton("Xóa");
     private final JButton btnRefresh = new JButton("Làm mới");
+
+    private final CourseStreamQueries courseStreamQueries = new CourseStreamQueries();
 
     public CoursesPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -51,9 +56,13 @@ public class CoursesPanel extends JPanel {
 
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchBar.setOpaque(false);
+        searchBar.add(new JLabel("Giá từ:"));
+        searchBar.add(tfMinPrice);
+        searchBar.add(new JLabel("đến:"));
+        searchBar.add(tfMaxPrice);
         searchBar.add(new JLabel("Tìm kiếm:"));
         searchBar.add(tfSearch);
-        JButton btnSearch = UiUtil.primaryButton("Tìm");
+        JButton btnSearch = UiUtil.primaryButton("Tìm/Lọc");
         btnSearch.addActionListener(e -> loadData(tfSearch.getText().trim()));
         searchBar.add(btnSearch);
         p.add(searchBar, BorderLayout.EAST);
@@ -159,12 +168,29 @@ public class CoursesPanel extends JPanel {
         btnEdit.setEnabled(false);
         btnDelete.setEnabled(false);
 
+        String minStr = tfMinPrice.getText().trim();
+        String maxStr = tfMaxPrice.getText().trim();
+
         new SwingWorker<java.util.List<Course>, Void>() {
             @Override
             protected List<Course> doInBackground() {
-                return (keyword == null || keyword.isBlank())
+                List<Course> data = (keyword == null || keyword.isBlank())
                         ? service.findAll()
                         : service.search(keyword);
+
+                try {
+                    java.math.BigDecimal min = minStr.isEmpty() ? null : new java.math.BigDecimal(minStr);
+                    java.math.BigDecimal max = maxStr.isEmpty() ? null : new java.math.BigDecimal(maxStr);
+
+                    if (min != null || max != null) {
+                        data = courseStreamQueries.filterByFeeRange(data, min, max);
+                    }
+                } catch (NumberFormatException e) {
+                    // Nếu nhập sai định dạng số thì không lọc giá, chỉ thông báo nhẹ
+                    log.warn("Định dạng giá không hợp lệ");
+                }
+
+                return data;
             }
 
             @Override
