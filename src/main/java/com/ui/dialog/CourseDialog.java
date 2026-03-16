@@ -100,7 +100,7 @@ public class CourseDialog extends JDialog {
         try {
             dto.setDuration(Integer.parseInt(tfDuration.getText().trim()));
         } catch (Exception e) {
-            warn("Số tiết trong tuần không hợp lệ!");
+            warn("Tổng số buổi không hợp lệ!");
             return;
         }
         try {

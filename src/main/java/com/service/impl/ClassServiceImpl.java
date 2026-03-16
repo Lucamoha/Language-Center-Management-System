@@ -197,6 +197,29 @@ public class ClassServiceImpl {
             }
         }
 
+        boolean scheduleChanged =
+                !Objects.equals(old.getStartDate(), dto.getStartDate()) ||
+                        !Objects.equals(old.getDaysOfWeek(), dto.getDaysOfWeek()) ||
+                        !Objects.equals(old.getRoom().getRoomID(), dto.getRoomID()) ||
+                        !Objects.equals(old.getCourse().getCourseID(), dto.getCourseID()) ||
+                        !Objects.equals(old.getCourse().getDuration(), course.get().getDuration());
+
+        if (scheduleChanged) {
+
+            scheduleRepo.deleteFutureSchedulesByClassId(id, today);
+
+            for (LocalDate date : futureStudyDays) {
+                Schedule s = Schedule.builder()
+                        .date(date)
+                        .startTime(dto.getStartTime())
+                        .endTime(dto.getEndTime())
+                        .aClass(old)
+                        .room(room.get())
+                        .build();
+                scheduleRepo.save(s);
+            }
+        }
+
         old.setClassName(dto.getClassName().trim());
         old.setMaxStudent(dto.getMaxStudent());
         old.setStatus(dto.getStatus());
@@ -207,24 +230,7 @@ public class ClassServiceImpl {
         old.setStartDate(dto.getStartDate());
         old.setEndDate(newEndDate);
 
-        // Đồng bộ Schedule: XÓA LỊCH TƯƠNG LAI - GIỮ LỊCH QUÁ KHỨ
-        scheduleRepo.deleteFutureSchedulesByClassId(id, today);
-
-        Class updatedClass = classRepo.update(old);
-
-        // Chèn lịch học mới cho tương lai
-        for (LocalDate date : futureStudyDays) {
-            Schedule s = Schedule.builder()
-                    .date(date)
-                    .startTime(dto.getStartTime())
-                    .endTime(dto.getEndTime())
-                    .aClass(updatedClass)
-                    .room(room.get())
-                    .build();
-            scheduleRepo.save(s);
-        }
-
-        return updatedClass;
+        return classRepo.update(old);
     }
 
     public static List<LocalDate> calculateStudyDays(
