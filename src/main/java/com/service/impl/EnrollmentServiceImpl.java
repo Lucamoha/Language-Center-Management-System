@@ -2,7 +2,6 @@ package com.service.impl;
 
 import com.dto.EnrollmentDTO;
 import com.exception.BusinessException;
-import com.exception.InvalidStatusException;
 import com.exception.SystemException;
 import com.model.academic.Class;
 import com.model.academic.ClassStatus;
@@ -64,12 +63,12 @@ public class EnrollmentServiceImpl {
         Student aStudent = studentRepo.findById(dto.getStudentID())
                 .orElseThrow(() -> new BusinessException("Mã học viên không tồn tại! Hãy nhập mã học viên khác!"));
         if (aStudent.getStatus() != UserStatus.ACTIVE)
-            throw new InvalidStatusException("Học viên bị khóa! Nhập mã học viên khác!");
+            throw new BusinessException("Học viên bị khóa! Nhập mã học viên khác!");
 
         Class aClass = classRepo.findById(dto.getClassID())
                 .orElseThrow(() -> new BusinessException("Mã lớp học không tồn tại! Hãy nhập mã lớp học khác!"));
         if (aClass.getStatus() != ClassStatus.ACTIVE)
-            throw new InvalidStatusException("Lớp học bị khóa! Nhập lớp học khác!");
+            throw new BusinessException("Lớp học bị khóa! Nhập lớp học khác!");
 
         if (user.isAdmin() || user.isConsultant()) {
             long current = enrollmentRepo.countByClass(dto.getClassID());

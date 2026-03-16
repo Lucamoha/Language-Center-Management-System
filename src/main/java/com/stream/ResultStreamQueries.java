@@ -77,7 +77,7 @@ public class ResultStreamQueries {
             if (score > avg) {
                 sb.append("Bạn đang học TỐT hơn mức trung bình lớp (+").append(String.format("%.1f", score - avg)).append(" điểm). Phát huy nhé!");
             } else if (score < avg) {
-                sb.append("Bạn đang thấp hơn trung bình lớp (").append(String.format("%.1f", avg - score)).append(" điểm). Cần tập trung hơn!");
+                sb.append("Bạn đang thấp hơn trung bình lớp (-").append(String.format("%.1f", avg - score)).append(" điểm). Cần tập trung hơn!");
             } else {
                 sb.append("Bạn đang ở mức trung bình của lớp.");
             }

@@ -12,6 +12,12 @@ public class ClassStreamQueries {
         return classRepository.findAll().stream()
                 .filter(c -> c.getTeacher().getTeacherID().equals(teacherId)).toList();
     }
+
+    /**
+     * Tìm tất cả các lớp học mà một sinh viên cụ thể đang tham gia
+     * @param StudentId Long
+     * @return List Class
+     */
     public List<Class> findClassByStudent(Long StudentId) {
         return classRepository.findAll().stream()
                 .filter(c -> c.getEnrollments().stream()
