@@ -1,5 +1,6 @@
 package com.ui.dialog;
 
+import com.model.academic.CourseStatus;
 import com.model.operation.Period;
 import com.model.operation.Schedule;
 import com.service.impl.ScheduleServiceImpl;
@@ -64,7 +65,9 @@ public class ClassDialog extends JDialog {
     }
 
     private void loadCourseData() {
-        List<Course> courses = courseService.findAll();
+        List<Course> courses = courseService.findAll().stream()
+                .filter(c->c.getStatus().equals(CourseStatus.ACTIVE))
+                .toList();
         for (Course course : courses) {
             cbCourse.addItem(course);
         }
@@ -174,18 +177,48 @@ public class ClassDialog extends JDialog {
     }
 
     private void onOk() {
-        String name = tfName.getText().trim();
-        if (name.isEmpty()) {
+        String nameStr = tfName.getText().trim();
+        if (nameStr.isEmpty()) {
             warn("Tên lớp học không được để trống!");
             return;
         }
 
+        String MaxStudentStr = tfMaxStudent.getText().trim();
+        if (MaxStudentStr.isEmpty()) {
+            warn("Số học viên tối đa không được để trống!");
+            return;
+        }
+
+        String roomIDStr = tfRoomID.getText().trim();
+        if (roomIDStr.isEmpty()) {
+            warn("Mã phòng học không được để trống!");
+            return;
+        }
+
+        String teacherIDStr = tfTeacherID.getText().trim();
+        if (teacherIDStr.isEmpty()) {
+            warn("Mã giáo viên không được để trống!");
+            return;
+        }
+
         ClassDTO dto = new ClassDTO();
-        dto.setClassName(name);
+        dto.setClassName(nameStr);
         try {
-            dto.setMaxStudent(Integer.parseInt(tfMaxStudent.getText().trim()));
+            dto.setMaxStudent(Integer.parseInt(MaxStudentStr));
         } catch (Exception e) {
             warn("Số học viên tối đa không hợp lệ!");
+            return;
+        }
+
+        java.util.Date dateFromChooser = dtcStartDate.getDate();
+        if (dateFromChooser == null) {
+            warn("Vui lòng chọn ngày bắt đầu!");
+            return;
+        }
+
+        ButtonModel selectedModel = periodGroup.getSelection();
+        if (selectedModel == null) {
+            warn("Vui lòng chọn một ca học!");
             return;
         }
 
@@ -194,7 +227,7 @@ public class ClassDialog extends JDialog {
         dto.setCourseID(((Course) cbCourse.getSelectedItem()).getCourseID());
 
         try {
-            dto.setRoomID(Long.parseLong(tfRoomID.getText().trim()));
+            dto.setRoomID(Long.parseLong(roomIDStr));
         } catch (Exception e) {
             warn("Mã phòng học không hợp lệ!");
             return;
@@ -207,19 +240,7 @@ public class ClassDialog extends JDialog {
             return;
         }
 
-        java.util.Date dateFromChooser = dtcStartDate.getDate();
-        if (dateFromChooser == null) {
-            warn("Vui lòng chọn ngày bắt đầu!");
-            return;
-        }
-
         dto.setDaysOfWeek(getSelectedDaysString(weekdaysCheckBoxes));
-
-        ButtonModel selectedModel = periodGroup.getSelection();
-        if (selectedModel == null) {
-            warn("Vui lòng chọn một ca học!");
-            return;
-        }
 
         LocalDate startDate = changeDateToLocalDate(dateFromChooser);
         Period selectedPeriod = Period.valueOf(selectedModel.getActionCommand());

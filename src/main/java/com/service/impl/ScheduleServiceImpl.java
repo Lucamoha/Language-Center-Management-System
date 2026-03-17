@@ -101,7 +101,7 @@ public class ScheduleServiceImpl {
                 dto.getDate(),
                 dto.getStartTime()
         );
-        if (!roomConflicts.isEmpty()) {
+        if (!roomConflicts.isEmpty() && !roomConflicts.getFirst().getScheduleID().equals(dto.getScheduleID())) {
             throw new BusinessException("Lỗi: Phòng " + room.get().getRoomName() + " có mã " + room.get().getRoomID() + " đã bị trùng lịch học tại thời điểm vừa nhập!");
         }
 
